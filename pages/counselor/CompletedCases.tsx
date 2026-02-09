@@ -1,11 +1,11 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { 
-  Box, 
-  Button, 
-  CircularProgress, 
-  IconButton, 
-  Typography 
+import {
+  Box,
+  Button,
+  CircularProgress,
+  IconButton,
+  Typography
 } from "@mui/material";
 import PersonIcon from "@mui/icons-material/Person";
 import LogoutIcon from "@mui/icons-material/Logout";
@@ -36,7 +36,7 @@ const CompletedCases: React.FC = () => {
     try {
       const auth = getAuth();
       await signOut(auth);
-      navigate("/auth");
+      navigate("/role-select");
     } catch (error) {
       console.error("Logout failed:", error);
     }

@@ -1,73 +1,48 @@
+import React from "react";
+import { useNavigate, useLocation, Outlet } from "react-router-dom";
+import { User, ChevronLeft } from "lucide-react";
+import { useApp } from "../context/AppContext";
 
-import React from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
-import { User, ChevronLeft } from 'lucide-react';
-import { useApp } from '../context/AppContext';
-
-interface LayoutProps {
-  children: React.ReactNode;
-}
-
-const Layout: React.FC<LayoutProps> = ({ children }) => {
-  const { logout, isAuthenticated } = useApp();
+const Layout: React.FC = () => {
+  const { isAuthenticated } = useApp(); // ❌ no logout here
   const navigate = useNavigate();
   const location = useLocation();
 
-  const backgroundClass = 'bg-gradient-to-b from-green-400 via-yellow-100 to-orange-300';
+  const backgroundClass =
+    "bg-gradient-to-b from-green-400 via-yellow-100 to-orange-300";
 
-  const handleProfileClick = () => {
-    navigate('/profile');
-  };
-
-  const handleBack = () => {
-    navigate(-1);
-  };
-
-  const isHome = location.pathname === '/' || location.pathname === '/role-select' || location.pathname === '/auth';
-  const isProfile = location.pathname === '/profile';
+  const isHome =
+    location.pathname === "/" ||
+    location.pathname === "/role-select" ||
+    location.pathname === "/auth";
 
   return (
-    <div className={`min-h-screen w-full transition-colors duration-500 ${backgroundClass} overflow-x-hidden`}>
-      {/* Header - Cleaned up: removed blur and background */}
+    <div className={`min-h-screen w-full ${backgroundClass} overflow-x-hidden`}>
       {!isHome && (
         <header className="fixed top-0 left-0 right-0 p-4 flex justify-between items-center z-50 bg-transparent">
-           <div className="flex items-center">
-            {location.pathname !== '/student/dashboard' && location.pathname !== '/counselor/dashboard' && (
-               <button 
-               onClick={handleBack}
-               className="p-2 rounded-full bg-white/40 hover:bg-white/60 transition mr-2 text-green-900 shadow-sm"
-             >
-               <ChevronLeft className="w-6 h-6" />
-             </button>
-            )}
-          </div>
+          {/* BACK BUTTON */}
+          <button
+            onClick={() => navigate(-1)}
+            className="p-2 rounded-full bg-white/40 hover:bg-white/60 transition"
+          >
+            <ChevronLeft />
+          </button>
 
-          <div className="flex items-center gap-3">
-             {isAuthenticated && !isProfile && (
-              <button
-                onClick={handleProfileClick}
-                className="p-2 rounded-full bg-white/40 hover:bg-white/60 transition shadow-sm text-green-900"
-                aria-label="Profile"
-              >
-                <User className="w-6 h-6" />
-              </button>
-            )}
-            
-            {isAuthenticated && (
-                <button 
-                    onClick={() => { logout(); navigate('/'); }}
-                    className="text-xs font-bold text-green-900 hover:text-green-700 underline px-2 py-1 bg-white/20 rounded-lg"
-                >
-                    Logout
-                </button>
-            )}
-          </div>
+          {/* PROFILE ICON ONLY */}
+          {isAuthenticated && (
+            <button
+              onClick={() => navigate("/profile")}
+              className="p-2 rounded-full bg-white/40"
+            >
+              <User />
+            </button>
+          )}
         </header>
       )}
 
-      {/* Main Content */}
-      <main className={`w-full max-w-md mx-auto min-h-screen flex flex-col ${!isHome ? 'pt-20' : ''} px-6 pb-10`}>
-        {children}
+      {/* MAIN CONTENT */}
+      <main className="pt-20 px-6 pb-10 max-w-md mx-auto">
+        <Outlet />
       </main>
     </div>
   );

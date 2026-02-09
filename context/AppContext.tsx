@@ -1,94 +1,70 @@
+import React, { createContext, useContext, useState, useEffect } from "react";
+import { onAuthStateChanged } from "firebase/auth";
+import { doc, getDoc } from "firebase/firestore";
+import { auth, db } from "../firebase/firebase";
 
-import React, { createContext, useContext, useState, ReactNode } from 'react';
-import { Session, Slot, UserRole } from '../types';
-import { MOCK_AVAILABLE_SLOTS, MOCK_PAST_SESSIONS } from '../constants';
+type Role = "STUDENT" | "COUNSELOR" | null;
 
 interface AppContextType {
-  role: UserRole;
-  setRole: (role: UserRole) => void;
+  role: Role;
+  setRole: (role: Role) => void;
   isAuthenticated: boolean;
   login: () => void;
   logout: () => void;
-  
-  availableSlots: Slot[];
-  addAvailableSlot: (date: Date, timeLabel: string) => void;
-  removeAvailableSlot: (slotId: string) => void;
-  
-  bookedSessions: Session[];
-  addSession: (session: Session) => void;
-  
-  selectedSlot: Slot | null;
-  setSelectedSlot: (slot: Slot | null) => void;
   selectedEmotions: string[];
   toggleEmotion: (emoji: string) => void;
-  feelingNote: string;
-  setFeelingNote: (note: string) => void;
-  resetBookingFlow: () => void;
+  loading: boolean;
 }
 
-const AppContext = createContext<AppContextType | undefined>(undefined);
+const AppContext = createContext<AppContextType | null>(null);
 
-export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-  const [role, setRole] = useState<UserRole>(null);
+export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const [role, setRole] = useState<Role>(null);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [availableSlots, setAvailableSlots] = useState<Slot[]>(MOCK_AVAILABLE_SLOTS);
-  const [bookedSessions, setBookedSessions] = useState<Session[]>(MOCK_PAST_SESSIONS);
-
-  const [selectedSlot, setSelectedSlot] = useState<Slot | null>(null);
   const [selectedEmotions, setSelectedEmotions] = useState<string[]>([]);
-  const [feelingNote, setFeelingNote] = useState<string>('');
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, async (user) => {
+      if (user) {
+        setIsAuthenticated(true);
+        try {
+          // Fetch user role from Firestore
+          const userDoc = await getDoc(doc(db, "Users", user.uid));
+          if (userDoc.exists()) {
+            const userData = userDoc.data();
+            // Normalize role to Uppercase to match types ("student" -> "STUDENT")
+            const userRole = userData.role ? userData.role.toUpperCase() as Role : null;
+            setRole(userRole);
+          }
+        } catch (error) {
+          console.error("Error fetching user role:", error);
+        }
+      } else {
+        setIsAuthenticated(false);
+        setRole(null);
+      }
+      setLoading(false);
+    });
+
+    return () => unsubscribe();
+  }, []);
 
   const login = () => setIsAuthenticated(true);
+
   const logout = () => {
+    auth.signOut();
     setIsAuthenticated(false);
     setRole(null);
-  };
-
-  const addSession = (session: Session) => {
-    setBookedSessions((prev) => [...prev, session]);
-  };
-
-  const addAvailableSlot = (date: Date, timeLabel: string) => {
-    setAvailableSlots(prev => {
-      // Comparison logic: check if this EXACT slot (day + time) exists for current counselor
-      const dateStr = date.toLocaleDateString('en-US');
-      const isDuplicate = prev.some(s => {
-        const sDate = new Date(s.fullDate).toLocaleDateString('en-US');
-        return sDate === dateStr && s.time === timeLabel && s.counselorName === 'You';
-      });
-
-      if (isDuplicate) return prev;
-
-      const newSlot: Slot = {
-        id: `slot-${Date.now()}-${Math.floor(Math.random() * 1000)}`,
-        counselorName: 'You',
-        day: date.toLocaleDateString('en-US', { weekday: 'long' }),
-        time: timeLabel,
-        fullDate: date.toISOString(),
-      };
-      
-      return [...prev, newSlot];
-    });
-  };
-
-  const removeAvailableSlot = (slotId: string) => {
-    setAvailableSlots(prev => prev.filter(s => s.id !== slotId));
+    setSelectedEmotions([]);
   };
 
   const toggleEmotion = (emoji: string) => {
-    setSelectedEmotions(prev => {
-      if (prev.includes(emoji)) {
-        return prev.filter(e => e !== emoji);
-      } else {
-        return [...prev, emoji];
-      }
-    });
-  };
-
-  const resetBookingFlow = () => {
-    setSelectedSlot(null);
-    setSelectedEmotions([]);
-    setFeelingNote('');
+    setSelectedEmotions((prev) =>
+      prev.includes(emoji)
+        ? prev.filter((e) => e !== emoji)
+        : [...prev, emoji]
+    );
   };
 
   return (
@@ -99,29 +75,24 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         isAuthenticated,
         login,
         logout,
-        availableSlots,
-        addAvailableSlot,
-        removeAvailableSlot,
-        bookedSessions,
-        addSession,
-        selectedSlot,
-        setSelectedSlot,
         selectedEmotions,
         toggleEmotion,
-        feelingNote,
-        setFeelingNote,
-        resetBookingFlow,
+        loading,
       }}
     >
-      {children}
+      {loading ? (
+        <div className="flex items-center justify-center min-h-screen bg-gray-50">
+          <div className="text-xl font-semibold text-gray-700">Loading unmuted...</div>
+        </div>
+      ) : (
+        children
+      )}
     </AppContext.Provider>
   );
 };
 
 export const useApp = () => {
-  const context = useContext(AppContext);
-  if (!context) {
-    throw new Error('useApp must be used within an AppProvider');
-  }
-  return context;
+  const ctx = useContext(AppContext);
+  if (!ctx) throw new Error("useApp must be used inside AppProvider");
+  return ctx;
 };

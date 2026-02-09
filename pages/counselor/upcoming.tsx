@@ -37,7 +37,7 @@ const UpcomingCases: React.FC = () => {
     try {
       const auth = getAuth();
       await signOut(auth);
-      navigate("/auth");
+      navigate("/role-select");
     } catch (error) {
       console.error("Logout failed:", error);
     }

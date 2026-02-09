@@ -75,7 +75,7 @@ const CounsellorProfilePage: React.FC<CounsellorProfilePageProps> = ({
     try {
       const auth = getAuth();
       await signOut(auth);
-      navigate("/auth");
+      navigate("/role-select");
     } catch (error) {
       console.error("Logout failed:", error);
     }
@@ -84,7 +84,7 @@ const CounsellorProfilePage: React.FC<CounsellorProfilePageProps> = ({
   return (
     <div className="w-full min-h-screen px-15 py-7">
       {/* ---------- HEADER (Matches Dashboard) ---------- */}
-      
+      <div className="flex justify-between items-center mb-10">
         <div className="flex items-center gap-6">
           <h2 className="text-4xl font-bold text-gray-800">Counsellor Profile</h2>
         </div>
@@ -116,7 +116,8 @@ const CounsellorProfilePage: React.FC<CounsellorProfilePageProps> = ({
             Logout
           </Button>
         </Box>
-      
+      </div>
+
 
       {/* ---------- MAIN CONTENT ---------- */}
       <Box

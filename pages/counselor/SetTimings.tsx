@@ -35,6 +35,7 @@ const SetTiming: React.FC = () => {
   }, [backend]);
 
   const loadSavedTimings = async () => {
+    if (!backend) return;
     setLoading(true);
     try {
       const sessions = await backend.getCounsellorSessions();
@@ -96,6 +97,11 @@ const SetTiming: React.FC = () => {
   };
 
   const saveAllSessions = async () => {
+    if (!backend) {
+      alert("Please wait for authentication...");
+      return;
+    }
+
     if (Object.keys(timings).length === 0) {
       alert("Add at least one session");
       return;

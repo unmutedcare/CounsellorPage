@@ -1,49 +1,23 @@
-import React, { useEffect, useState } from "react";
+import React from "react";
 import { Navigate } from "react-router-dom";
-import { onAuthStateChanged } from "firebase/auth";
-import { doc, getDoc } from "firebase/firestore";
-import { auth, db } from "../firebase/firebase";
+import { useApp } from "../context/AppContext";
 
 const ProtectedRoute = ({
   children,
   role,
 }: {
   children: React.ReactNode;
-  role?: "student" | "counsellor";
+  role?: "STUDENT" | "COUNSELOR";
 }) => {
-  const [loading, setLoading] = useState(true);
-  const [allowed, setAllowed] = useState(false);
+  const { isAuthenticated, role: appRole } = useApp();
 
-  useEffect(() => {
-    const unsub = onAuthStateChanged(auth, async (user) => {
-      if (!user) {
-        setAllowed(false);
-        setLoading(false);
-        return;
-      }
+  if (!isAuthenticated) {
+    return <Navigate to="/role-select" replace />;
+  }
 
-      if (!role) {
-        setAllowed(true);
-        setLoading(false);
-        return;
-      }
-
-      const ref = doc(
-        db,
-        role === "student" ? "Users" : "Counsellors",
-        user.uid
-      );
-
-      const snap = await getDoc(ref);
-      setAllowed(snap.exists());
-      setLoading(false);
-    });
-
-    return () => unsub();
-  }, [role]);
-
-  if (loading) return <p>Loading...</p>;
-  if (!allowed) return <Navigate to="/auth" />;
+  if (role && appRole !== role) {
+    return <Navigate to="/role-select" replace />;
+  }
 
   return <>{children}</>;
 };

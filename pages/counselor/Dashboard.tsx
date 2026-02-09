@@ -27,14 +27,14 @@ const CounselorDashboard: React.FC = () => {
     try {
       const auth = getAuth();
       await signOut(auth);
-      navigate("/auth");
+      navigate("/role-select");
     } catch (error) {
       console.error("Logout failed:", error);
     }
   };
 
   return (
-     <div className="w-full min-h-screen px-15 py-7">
+    <div className="w-full min-h-screen px-15 py-7">
       {/* ---------- HEADER ---------- */}
       <div className="flex justify-between items-center mb-10">
         <h2 className="text-4xl font-bold mr-7">Counsellor Dashboard</h2>
@@ -42,7 +42,7 @@ const CounselorDashboard: React.FC = () => {
           <Button
             variant="contained"
             startIcon={<PersonIcon />}
-            onClick={() => navigate("/profile")}
+            onClick={() => navigate("/counsellor/profile")}
             sx={{
               backgroundColor: "#fff",
               color: "#2e7d32",
@@ -71,10 +71,10 @@ const CounselorDashboard: React.FC = () => {
 
       {/* ---------- MAIN CONTENT ---------- */}
       <div className="max-w-2xl mx-auto space-y-6">
-        
+
         {/* Set Availability Card */}
         <div
-          onClick={() => navigate("/counselor/set-timing")}
+          onClick={() => navigate("/counsellor/set-timing")}
           className="cursor-pointer bg-white rounded-2xl shadow-lg p-6
                      hover:shadow-xl transition-all border border-green-200 flex items-center gap-5"
         >

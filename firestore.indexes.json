@@ -1,0 +1,177 @@
+{
+  "indexes": [
+    {
+      "collectionGroup": "VideoCallSession",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "counsellorId",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "status",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "sessionTimestamp",
+          "order": "DESCENDING"
+        },
+        {
+          "fieldPath": "__name__",
+          "order": "DESCENDING"
+        }
+      ],
+      "density": "SPARSE_ALL"
+    },
+    {
+      "collectionGroup": "VideoCallSession",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "payment.status",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "selectedSlot.counsellorId",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "sessionTimestamp",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "__name__",
+          "order": "ASCENDING"
+        }
+      ],
+      "density": "SPARSE_ALL"
+    },
+    {
+      "collectionGroup": "VideoCallSession",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "selectedSlot.counsellorId",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "sessionTimestamp",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "__name__",
+          "order": "ASCENDING"
+        }
+      ],
+      "density": "SPARSE_ALL"
+    },
+    {
+      "collectionGroup": "VideoCallSession",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "selectedSlot.counsellorId",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "status",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "sessionTimestamp",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "__name__",
+          "order": "ASCENDING"
+        }
+      ],
+      "density": "SPARSE_ALL"
+    },
+    {
+      "collectionGroup": "VideoCallSession",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "selectedSlot.counsellorId",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "status",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "sessionTimestamp",
+          "order": "DESCENDING"
+        },
+        {
+          "fieldPath": "__name__",
+          "order": "DESCENDING"
+        }
+      ],
+      "density": "SPARSE_ALL"
+    },
+    {
+      "collectionGroup": "VideoCallSession",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "status",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "sessionTimestamp",
+          "order": "DESCENDING"
+        },
+        {
+          "fieldPath": "__name__",
+          "order": "DESCENDING"
+        }
+      ],
+      "density": "SPARSE_ALL"
+    },
+    {
+      "collectionGroup": "VideoCallSession",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "status",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "student.uid",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "createdAt",
+          "order": "DESCENDING"
+        },
+        {
+          "fieldPath": "__name__",
+          "order": "DESCENDING"
+        }
+      ],
+      "density": "SPARSE_ALL"
+    },
+    {
+      "collectionGroup": "VideoCallSession",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "student.uid",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "sessionTimestamp",
+          "order": "DESCENDING"
+        },
+        {
+          "fieldPath": "__name__",
+          "order": "DESCENDING"
+        }
+      ],
+      "density": "SPARSE_ALL"
+    }
+  ],
+  "fieldOverrides": []
+}
