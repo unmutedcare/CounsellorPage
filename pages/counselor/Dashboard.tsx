@@ -1,13 +1,19 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Box, Button, CircularProgress } from "@mui/material";
-import PersonIcon from "@mui/icons-material/Person";
-import LogoutIcon from "@mui/icons-material/Logout";
-import CalendarMonthIcon from "@mui/icons-material/CalendarMonth";
-import AssignmentIcon from "@mui/icons-material/Assignment";
-import DoneAllIcon from "@mui/icons-material/DoneAll";
 import { fetchCounsellorSessions } from "../../services/counsellorSessionService";
-import { getAuth, signOut } from "firebase/auth";
+import { auth } from "../../firebase/firebase";
+import { 
+  User, 
+  LogOut, 
+  Calendar, 
+  Clock, 
+  ClipboardList, 
+  CheckCircle2, 
+  Sparkles,
+  ChevronRight,
+  ChevronLeft,
+  Wind
+} from "lucide-react";
 
 const CounselorDashboard: React.FC = () => {
   const navigate = useNavigate();
@@ -25,8 +31,7 @@ const CounselorDashboard: React.FC = () => {
 
   const handleLogout = async () => {
     try {
-      const auth = getAuth();
-      await signOut(auth);
+      await auth?.signOut();
       navigate("/role-select");
     } catch (error) {
       console.error("Logout failed:", error);
@@ -34,116 +39,113 @@ const CounselorDashboard: React.FC = () => {
   };
 
   return (
-    <div className="w-full min-h-screen px-15 py-7">
-      {/* ---------- HEADER ---------- */}
-      <div className="flex justify-between items-center mb-10">
-        <h2 className="text-4xl font-bold mr-7">Counsellor Dashboard</h2>
-        <Box sx={{ display: "flex", gap: 3 }}>
-          <Button
-            variant="contained"
-            startIcon={<PersonIcon />}
-            onClick={() => navigate("/counsellor/profile")}
-            sx={{
-              backgroundColor: "#fff",
-              color: "#2e7d32",
-              fontWeight: 600,
-              boxShadow: "0px 2px 4px rgba(0,0,0,0.1)",
-              "&:hover": { backgroundColor: "#f0f0f0" },
-            }}
-          >
-            Profile
-          </Button>
-          <Button
-            variant="contained"
-            startIcon={<LogoutIcon />}
-            onClick={handleLogout}
-            sx={{
-              backgroundColor: "#ff6b6b",
-              color: "#fff",
-              fontWeight: 600,
-              "&:hover": { backgroundColor: "#ff5252" },
-            }}
-          >
-            Logout
-          </Button>
-        </Box>
-      </div>
-
-      {/* ---------- MAIN CONTENT ---------- */}
-      <div className="max-w-2xl mx-auto space-y-6">
-
-        {/* Set Availability Card */}
-        <div
-          onClick={() => navigate("/counsellor/set-timing")}
-          className="cursor-pointer bg-white rounded-2xl shadow-lg p-6
-                     hover:shadow-xl transition-all border border-green-200 flex items-center gap-5"
-        >
-          <div className="bg-green-100 p-3 rounded-full">
-            <CalendarMonthIcon className="text-green-700" />
-          </div>
-          <div>
-            <h3 className="text-xl font-bold text-green-700">Set Your Availability</h3>
-            <p className="text-gray-600 text-sm">Choose dates and add up to 3 sessions per day.</p>
-          </div>
+    <div className="relative min-h-screen w-full bg-[#0a0a0c] text-white p-6 pb-24 overflow-x-hidden">
+      {/* Background Accents */}
+      <div className="absolute top-[10%] right-[-10%] w-[40%] h-[40%] bg-[#5856d6] opacity-5 blur-[120px] rounded-full" />
+      
+      <div className="max-w-6xl mx-auto space-y-12 relative z-10 reveal pt-8">
+        
+        {/* ACTION CARDS */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+          <ActionCard 
+            icon={<Calendar size={24} />}
+            title="Set Availability"
+            desc="Curate your schedule. Add up to 3 sacred sessions per day."
+            color="#4caf50"
+            onClick={() => navigate("/counsellor/set-timing")}
+          />
+          <ActionCard 
+            icon={<ClipboardList size={24} />}
+            title="Upcoming Cases"
+            desc="Prepare for transformation. Manage your scheduled sessions."
+            color="#5856d6"
+            onClick={() => navigate("/counsellor/upcoming-cases")}
+          />
+          <ActionCard 
+            icon={<CheckCircle2 size={24} />}
+            title="Session Records"
+            desc="Reflect on history. Review past sessions and student progress."
+            color="#ff2d55"
+            onClick={() => navigate("/counsellor/completed-cases")}
+          />
         </div>
 
-        {/* Upcoming Cases Card */}
-        <div
-          onClick={() => navigate("/counsellor/upcoming-cases")}
-          className="cursor-pointer bg-white rounded-2xl shadow-lg p-6
-                     hover:shadow-xl transition-all border border-blue-200 flex items-center gap-5"
-        >
-          <div className="bg-blue-100 p-3 rounded-full">
-            <AssignmentIcon className="text-blue-700" />
+        {/* SESSIONS LIST */}
+        <div className="space-y-8 pt-8">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+               <Sparkles size={20} className="text-[#5856d6]" />
+               <h2 className="text-2xl font-bold tracking-tighter">My Sessions</h2>
+            </div>
+            <span className="text-[10px] font-luxury tracking-[0.2em] opacity-30 uppercase">{sessions.length} TOTAL SESSIONS</span>
           </div>
-          <div>
-            <h3 className="text-xl font-bold text-blue-700">Upcoming Cases</h3>
-            <p className="text-gray-600 text-sm">View and manage your scheduled student sessions.</p>
-          </div>
-        </div>
-
-        {/* Completed Cases Card */}
-        <div
-          onClick={() => navigate("/counsellor/completed-cases")}
-          className="cursor-pointer bg-white rounded-2xl shadow-lg p-6
-                     hover:shadow-xl transition-all border border-purple-200 flex items-center gap-5"
-        >
-          <div className="bg-purple-100 p-3 rounded-full">
-            <DoneAllIcon className="text-purple-700" />
-          </div>
-          <div>
-            <h3 className="text-xl font-bold text-purple-700">Completed Cases</h3>
-            <p className="text-gray-600 text-sm">Review history and notes from past sessions.</p>
-          </div>
-        </div>
-
-        {/* ---------- SESSIONS LIST ---------- */}
-        <div className="mt-12">
-          <h2 className="text-3xl font-bold text-center mb-8">My Sessions</h2>
 
           {loading ? (
-            <div className="flex justify-center"><CircularProgress size={30} /></div>
+            <div className="flex justify-center py-20">
+               <div className="w-12 h-12 border-2 border-[#5856d6] border-t-transparent rounded-full animate-spin" />
+            </div>
           ) : sessions.length === 0 ? (
-            <p className="text-center text-gray-500 bg-white p-6 rounded-xl border border-dashed">No sessions yet</p>
+            <div className="glass-panel p-20 text-center border-dashed border-white/5 opacity-40">
+               <p className="font-luxury tracking-widest text-sm uppercase">No active sessions in your sanctuary.</p>
+            </div>
           ) : (
-            <div className="space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {sessions.map((s) => (
-                <div key={s.id} className="bg-white p-5 rounded-xl shadow border-l-4 border-green-500 flex justify-between items-center">
-                  <div>
-                    <p className="font-bold">Student: {s.studentId}</p>
-                    <p className="text-sm text-gray-600">{s.date} | {s.time}</p>
+                <div key={s.id} className="glass-panel p-8 border-white/5 hover:border-white/10 transition-all flex justify-between items-center group">
+                  <div className="space-y-2">
+                    <p className="text-[10px] font-luxury tracking-[0.2em] text-[#5856d6] uppercase">Active Engagement</p>
+                    <h4 className="text-xl font-bold tracking-tight">Student: {s.studentId.slice(0, 8)}...</h4>
+                    <div className="flex items-center gap-4 text-white/40 text-sm font-light">
+                       <div className="flex items-center gap-1.5"><Calendar size={14}/> {s.date}</div>
+                       <div className="flex items-center gap-1.5"><Clock size={14}/> {s.time}</div>
+                    </div>
                   </div>
-                  <span className="px-3 py-1 bg-gray-100 text-xs font-bold rounded-full uppercase tracking-wider text-gray-500">
-                    {s.status}
-                  </span>
+                  <div className="flex flex-col items-end gap-4">
+                    <span className="px-4 py-1 bg-white/5 rounded-full text-[9px] font-luxury tracking-widest uppercase border border-white/10 group-hover:border-[#5856d6]/30 transition-colors">
+                      {s.status}
+                    </span>
+                    <button className="text-[#5856d6] opacity-0 group-hover:opacity-100 transition-opacity translate-x-2 group-hover:translate-x-0">
+                       <ChevronRight size={20} />
+                    </button>
+                  </div>
                 </div>
               ))}
             </div>
           )}
         </div>
       </div>
+
+      <div className="absolute bottom-12 text-white/5 font-luxury text-[10px] tracking-[1.5em] uppercase left-1/2 -translate-x-1/2 pointer-events-none">
+        G U I D E • O P E R A T I O N S
+      </div>
     </div>
   );
 };
+
+const ActionCard = ({ icon, title, desc, color, onClick }: any) => (
+  <div 
+    onClick={onClick}
+    className="group cursor-pointer glass-panel p-10 border-white/5 hover:border-white/20 transition-all duration-500 relative overflow-hidden"
+  >
+    <div className="absolute top-0 right-0 p-6 opacity-5 group-hover:opacity-10 transition-opacity translate-x-4 translate-y-[-4px]">
+       {React.cloneElement(icon, { size: 120 })}
+    </div>
+    <div className="relative z-10 space-y-6">
+      <div 
+        className="w-14 h-14 rounded-2xl flex items-center justify-center transition-all duration-500 group-hover:scale-110"
+        style={{ backgroundColor: `${color}15`, color: color, border: `1px solid ${color}20` }}
+      >
+        {icon}
+      </div>
+      <div>
+        <h3 className="text-2xl font-bold tracking-tight mb-2">{title}</h3>
+        <p className="text-white/40 font-light text-sm leading-relaxed">{desc}</p>
+      </div>
+      <div className="pt-4 flex items-center gap-2 text-xs font-luxury tracking-widest opacity-0 group-hover:opacity-100 transition-all translate-x-[-10px] group-hover:translate-x-0" style={{ color }}>
+        OPEN PORTAL <ChevronRight size={14} />
+      </div>
+    </div>
+  </div>
+);
 
 export default CounselorDashboard;

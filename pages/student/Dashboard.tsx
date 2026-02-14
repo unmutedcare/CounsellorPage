@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-
+import { User, MessageSquare, Sparkles, Compass, Zap, Book, Wind, ChevronRight, ChevronLeft } from "lucide-react";
 
 const quotes = [
   `"The oak fought the wind and was broken, the willow bent when it must and survived." – Robert Jordan`,
@@ -18,209 +18,95 @@ const StudentDashboard: React.FC = () => {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
 
-  // ---------------------------------------------
-  // HERO BUTTON LOGIC
-  // ---------------------------------------------
   const handleTalkToSomeone = async () => {
     setLoading(true);
-
-    // Navigate directly to emotion selection to start a new session
     navigate("/student/emotion-selection");
-
     setLoading(false);
   };
 
   return (
-    <>
-      <style>{css}</style>
+    <div className="relative min-h-screen w-full bg-[#0a0a0c] text-white p-6 pb-24 overflow-x-hidden">
+      {/* Aesthetic Background Glows */}
+      <div className="absolute top-[10%] right-[-10%] w-[40%] h-[40%] bg-brand-primary opacity-5 blur-[120px] rounded-full" />
+      <div className="absolute bottom-[10%] left-[-10%] w-[40%] h-[40%] bg-brand-secondary opacity-5 blur-[120px] rounded-full" />
 
-      
-        {/* APP BAR */}
-        <div className="appbar">
-          <button
-            className="profile-btn"
-            onClick={() => navigate("/profile")}
-          >
-            👤
-          </button>
-        </div>
-
-        {/* QUOTE CARD */}
-        <div className="quote-card">
-          <span className="quote-icon">❝</span>
-          <p>{getQuoteOfTheDay()}</p>
-        </div>
-
-        {/* HERO BUTTON */}
-        <div className="hero" onClick={handleTalkToSomeone}>
-          <div className="hero-icon">🧘</div>
-          <h1>Talk To Someone</h1>
-          <p>Connect with a counselor</p>
-        </div>
-
-        {/* FEATURES */}
-        <div className="features">
-          <h2>Explore More</h2>
-          <Feature text="Community (Coming Soon)" />
-          <Feature text="AI Quick Solutions (Coming Soon)" />
-          <Feature text="Daily Journal (Coming Soon)" />
-          <Feature text="Meditation Room (Coming Soon)" />
-        </div>
-
-        {/* CONTACT US FAB */}
-        <button
-          className="fab"
-          onClick={() => navigate("/help")}
-        >
-          💬 Contact Us
-        </button>
-
-        {/* LOADING OVERLAY */}
-        {loading && (
-          <div className="overlay">
-            <div className="spinner" />
+      <div className="max-w-5xl mx-auto space-y-12 relative z-10 pt-8">
+        
+        {/* QUOTE SECTION */}
+        <div className="glass-panel p-8 border border-white/5 relative overflow-hidden group">
+          <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:opacity-10 transition-opacity">
+            <Book size={80} />
           </div>
-        )}
-      
-    </>
+          <div className="flex gap-6 items-start">
+            <span className="text-4xl text-brand-primary font-serif italic">"</span>
+            <p className="text-xl md:text-2xl font-light leading-relaxed text-white/80">
+              {getQuoteOfTheDay()}
+            </p>
+          </div>
+        </div>
+
+        {/* HERO CTA */}
+        <div 
+          onClick={handleTalkToSomeone}
+          className="relative group cursor-pointer"
+        >
+          <div className="absolute -inset-1 accent-gradient rounded-[32px] blur opacity-20 group-hover:opacity-40 transition duration-1000 group-hover:duration-200"></div>
+          <div className="relative glass-panel p-12 border border-white/10 flex flex-col md:flex-row items-center justify-between gap-8 overflow-hidden">
+            <div className="absolute top-[-20%] left-[-10%] w-64 h-64 bg-brand-primary opacity-10 blur-[80px] rounded-full group-hover:scale-150 transition-transform duration-1000" />
+            
+            <div className="text-center md:text-left relative z-10">
+              <div className="inline-flex items-center gap-2 px-3 py-1 bg-brand-primary/20 rounded-full mb-6">
+                <Sparkles size={14} className="text-brand-primary" />
+                <span className="text-[10px] font-luxury tracking-widest text-brand-primary uppercase">Connect with Support</span>
+              </div>
+              <h1 className="text-5xl md:text-6xl font-bold tracking-tighter mb-4">Book a <span className="text-gradient italic">Session</span></h1>
+              <p className="text-white/40 text-lg font-light max-w-md">Schedule a private, 30-minute session with a certified peer counselor in our secure network.</p>
+            </div>
+
+            <div className="w-24 h-24 bg-white/5 rounded-3xl flex items-center justify-center group-hover:scale-110 transition-transform duration-500 border border-white/10 shadow-xl">
+               <MessageSquare size={40} className="text-white group-hover:text-brand-primary transition-colors" />
+            </div>
+          </div>
+        </div>
+
+        {/* EXPLORE SECTION */}
+        <div className="space-y-6">
+          <div className="flex items-center gap-3">
+             <Compass size={20} className="text-brand-secondary" />
+             <h2 className="text-xl font-luxury tracking-[0.2em] text-white/60">RESOURCES</h2>
+          </div>
+          
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            <FeatureCard icon={<Zap size={20}/>} text="AI Support" badge="BETA" color="#6366f1" />
+            <FeatureCard icon={<Wind size={20}/>} text="Mindfulness" badge="SOON" color="#10b981" />
+            <FeatureCard icon={<Book size={20}/>} text="Wellness Journal" badge="SOON" color="#6366f1" />
+            <FeatureCard icon={<User size={20}/>} text="Support Community" badge="SOON" color="#10b981" />
+          </div>
+        </div>
+      </div>
+
+      {/* LOADING OVERLAY */}
+      {loading && (
+        <div className="fixed inset-0 z-[100] bg-black/80 backdrop-blur-md flex items-center justify-center">
+           <div className="w-16 h-16 border-2 border-brand-primary border-t-transparent rounded-full animate-spin shadow-[0_0_20px_rgba(16,185,129,0.4)]" />
+        </div>
+      )}
+    </div>
   );
 };
 
-const Feature = ({ text }: { text: string }) => (
-  <div className="feature">
-    <span>🌱</span>
-    <p>{text}</p>
+const FeatureCard = ({ icon, text, badge, color }: { icon: any, text: string, badge: string, color: string }) => (
+  <div className="glass-panel p-6 border border-white/5 hover:border-white/20 transition-all cursor-not-allowed group">
+    <div className="flex flex-col gap-6">
+       <div className="w-10 h-10 rounded-xl bg-white/5 flex items-center justify-center group-hover:bg-white/10 transition-colors">
+          <div style={{ color }}>{icon}</div>
+       </div>
+       <div>
+          <div className="text-[9px] font-luxury tracking-[0.2em] mb-2 opacity-40">{badge}</div>
+          <p className="text-sm font-semibold tracking-wide text-white/70">{text}</p>
+       </div>
+    </div>
   </div>
 );
 
 export default StudentDashboard;
-
-// ---------------------------------------------
-// CSS (INLINE, SAME FILE)
-// ---------------------------------------------
-const css = `
-.page {
-  min-height: 100vh;
-  padding: 20px 20px 100px;
-  background: linear-gradient(135deg, #e8f5e9, #c8e6c9);
-  color: #1b5e20;
-  position: relative;
-}
-
-.appbar {
-  display: flex;
-  justify-content: flex-end;
-}
-
-.profile-btn {
-  background: white;
-  border: none;
-  font-size: 28px;
-  color: #1b5e20;
-  cursor: pointer;
-  border-radius: 50%;
-  width: 48px;
-  height: 48px;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-}
-
-.quote-card {
-  margin-top: 20px;
-  padding: 16px;
-  background: white;
-  color: #1b5e20;
-  border-radius: 18px;
-  display: flex;
-  gap: 10px;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.08);
-}
-
-.quote-icon {
-  font-size: 26px;
-}
-
-.hero {
-  margin-top: 35px;
-  padding: 40px 20px;
-  background: linear-gradient(135deg, #43a047, #2e7d32);
-  border-radius: 28px;
-  text-align: center;
-  cursor: pointer;
-  box-shadow: 0 6px 14px rgba(0,0,0,0.3);
-}
-
-.hero-icon {
-  font-size: 54px;
-}
-
-.hero h1 {
-  margin: 18px 0 8px;
-  font-size: 28px;
-  color: white;
-}
-
-.hero p {
-  color: rgba(255,255,255,0.85);
-}
-
-.features {
-  margin-top: 40px;
-}
-
-.features h2 {
-  margin-bottom: 16px;
-}
-
-.feature {
-  margin-top: 12px;
-  padding: 14px;
-  background: white;
-  border-radius: 16px;
-  color: #1b5e20;
-  display: flex;
-  gap: 16px;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.06);
-}
-
-.fab {
-  position: fixed;
-  bottom: 24px;
-  right: 24px;
-  background: #43a047;
-  color: white;
-  border: none;
-  padding: 14px 22px;
-  border-radius: 28px;
-  font-size: 16px;
-  cursor: pointer;
-}
-
-.overlay {
-  position: fixed;
-  inset: 0;
-  background: rgba(0,0,0,0.4);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.spinner {
-  width: 40px;
-  height: 40px;
-  border: 4px solid #c8e6c9;
-  border-top: 4px solid #1b5e20;
-  border-radius: 50%;
-  animation: spin 1s linear infinite;
-}
-
-.center {
-  height: 100vh;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-@keyframes spin {
-  to { transform: rotate(360deg); }
-}
-`;

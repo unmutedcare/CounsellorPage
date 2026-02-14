@@ -15,7 +15,6 @@ const firebaseConfig = {
 console.log("🔥 FIREBASE CONFIG", firebaseConfig);
 
 const app = initializeApp(firebaseConfig);
-
 export const auth = getAuth(app);
 export const db = getFirestore(app);
 export const functions = getFunctions(app, "asia-south1");

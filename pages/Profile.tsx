@@ -1,24 +1,53 @@
 import React, { useState, useEffect } from "react";
-import { useLocation } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { useApp } from "../context/AppContext";
-import { Calendar, Clock, User } from "lucide-react";
+import { 
+  Calendar, 
+  Clock, 
+  User, 
+  Sparkles, 
+  Wind, 
+  ChevronRight, 
+  History, 
+  CalendarCheck, 
+  ChevronLeft,
+  Edit3,
+  Save,
+  CheckCircle2,
+  Mail,
+  Shield
+} from "lucide-react";
 import { fetchMyBookings } from "../services/studentBookingService";
 import { refreshSessionStatus } from "../services/sessionStatusService";
+import { getUserProfile, updateUserProfile } from "../services/userService";
 
 const Profile: React.FC = () => {
-  const { role } = useApp();
+  const { role, logout } = useApp();
   const location = useLocation();
+  const navigate = useNavigate();
 
-  const [activeTab, setActiveTab] = useState<"upcoming" | "completed">("upcoming");
+  const [activeTab, setActiveTab] = useState<"upcoming" | "completed" | "details">("upcoming");
   const [sessions, setSessions] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [profile, setProfile] = useState<any>(null);
+  const [isEditing, setIsEditing] = useState(false);
+  const [username, setUsername] = useState("");
+  const [saving, setSaving] = useState(false);
+  const [success, setSuccess] = useState(false);
 
-  // Refresh status + Load sessions
+  // Refresh status + Load sessions + profile
   useEffect(() => {
     const load = async () => {
       await refreshSessionStatus();
-      const data = await fetchMyBookings();
-      setSessions(data);
+      const [bookings, profileData] = await Promise.all([
+        fetchMyBookings(),
+        getUserProfile()
+      ]);
+      setSessions(bookings);
+      setProfile(profileData);
+      if (profileData) {
+        setUsername(profileData.username || "");
+      }
       setLoading(false);
     };
     load();
@@ -29,103 +58,198 @@ const Profile: React.FC = () => {
     const params = new URLSearchParams(location.search);
     const tab = params.get("tab");
     if (tab === "completed") setActiveTab("completed");
+    else if (tab === "details") setActiveTab("details");
     else setActiveTab("upcoming");
   }, [location.search]);
 
-  // ✅ Correct filtering by session status
   const filteredSessions = sessions.filter(
     s => s.status === activeTab
   );
 
-  const getCardColor = () =>
-    activeTab === "upcoming"
-      ? "border-l-4 border-orange-500 bg-white/80"
-      : "border-l-4 border-green-500 bg-white/80";
+  const handleUpdateProfile = async () => {
+    setSaving(true);
+    try {
+      await updateUserProfile({ username });
+      setSuccess(true);
+      setProfile({ ...profile, username });
+      setIsEditing(false);
+      setTimeout(() => setSuccess(false), 3000);
+    } catch (err: any) {
+      alert(err.message || "Update failed");
+    } finally {
+      setSaving(false);
+    }
+  };
 
-  const getStatusBadge = () =>
-    activeTab === "upcoming"
-      ? "bg-orange-100 text-orange-700"
-      : "bg-green-100 text-green-700";
+  const handleLogout = () => {
+    logout();
+    navigate("/");
+  };
 
   return (
-    <div className="flex flex-col flex-grow animate-in slide-in-from-bottom-5">
-      <div className="flex items-center gap-4 mb-8">
-        <div className="w-16 h-16 rounded-full bg-white/50 flex items-center justify-center shadow-md">
-          <User className="w-8 h-8 text-gray-600" />
-        </div>
-        <div>
-          <h2 className="text-2xl font-bold text-gray-800">My Profile</h2>
-          <p className="text-gray-600 text-sm">
-            {role === "STUDENT" ? "Student Account" : "Counsellor Account"}
-          </p>
-        </div>
-      </div>
-
-      {/* Tabs */}
-      <div className="flex p-1 bg-black/5 rounded-xl mb-6">
-        <button
-          onClick={() => setActiveTab("upcoming")}
-          className={`flex-1 py-2 text-sm font-bold rounded-lg transition-all ${
-            activeTab === "upcoming"
-              ? "bg-white shadow text-orange-600"
-              : "text-gray-500 hover:text-gray-700"
-          }`}
-        >
-          Upcoming
-        </button>
-        <button
-          onClick={() => setActiveTab("completed")}
-          className={`flex-1 py-2 text-sm font-bold rounded-lg transition-all ${
-            activeTab === "completed"
-              ? "bg-white shadow text-green-600"
-              : "text-gray-500 hover:text-gray-700"
-          }`}
-        >
-          Completed
-        </button>
-      </div>
-
-      {/* Sessions */}
-      <div className="space-y-4 overflow-y-auto pb-4 no-scrollbar">
-        {loading ? (
-          <div className="text-center py-10 text-gray-500">Loading sessions…</div>
-        ) : filteredSessions.length === 0 ? (
-          <div className="text-center text-gray-500 py-10 bg-white/30 rounded-xl border border-white/40">
-            No {activeTab} sessions found.
+    <div className="relative min-h-screen w-full bg-[#0a0a0c] text-white p-6 overflow-x-hidden">
+      {/* Background Accents */}
+      <div className="absolute top-[10%] left-[-10%] w-[50%] h-[50%] bg-brand-primary opacity-[0.03] blur-[150px] rounded-full animate-pulse-glow" />
+      
+      <div className="relative z-10 max-w-4xl mx-auto w-full flex flex-col pt-12 reveal">
+        
+        {/* Identity Overview */}
+        <div className="flex flex-col md:flex-row items-center gap-8 mb-16">
+          <div className="w-24 h-24 rounded-[2.5rem] accent-gradient p-[1px]">
+             <div className="w-full h-full bg-[#0a0a0c] rounded-[2.5rem] flex items-center justify-center relative overflow-hidden group">
+                <User size={40} className="text-white relative z-10" />
+             </div>
           </div>
-        ) : (
-          filteredSessions.map(session => (
-            <div
-              key={session.id}
-              className={`p-5 rounded-xl shadow-sm hover:shadow-md transition-shadow backdrop-blur-sm ${getCardColor()}`}
-            >
-              <div className="flex justify-between items-start mb-2">
-                <h3 className="font-bold text-gray-800 text-lg">
-                  {session.counsellorName}
-                </h3>
-                <span
-                  className={`text-xs px-2 py-1 rounded-full font-bold uppercase tracking-wider ${getStatusBadge()}`}
-                >
-                  {activeTab}
-                </span>
-              </div>
+          <div className="text-center md:text-left space-y-2">
+            <div className="inline-flex items-center gap-2 px-3 py-1 bg-white/5 rounded-full border border-white/10">
+               <Sparkles size={12} className="text-brand-primary" />
+               <span className="text-[10px] font-luxury tracking-widest text-white/60 uppercase">{role} Identity</span>
+            </div>
+            <h2 className="text-5xl font-bold tracking-tighter">My <span className="text-gradient italic">Sanctuary</span></h2>
+            <p className="text-white/30 font-light tracking-wide italic">Your history of support and transformation.</p>
+          </div>
+        </div>
 
-              <div className="flex flex-col gap-1 text-sm text-gray-600">
-                <div className="flex items-center gap-2">
-                  <Calendar className="w-4 h-4 text-gray-400" />
-                  <span>{session.date}</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <Clock className="w-4 h-4 text-gray-400" />
-                  <span>{session.time}</span>
+        {/* Navigation Tabs */}
+        <div className="flex p-1.5 bg-white/5 rounded-3xl border border-white/10 mb-12 max-w-2xl mx-auto w-full overflow-x-auto no-scrollbar shadow-xl">
+          <TabButton 
+            active={activeTab === "upcoming"} 
+            onClick={() => setActiveTab("upcoming")}
+            icon={<CalendarCheck size={16} />}
+            label="Upcoming Sessions"
+          />
+          <TabButton 
+            active={activeTab === "completed"} 
+            onClick={() => setActiveTab("completed")}
+            icon={<History size={16} />}
+            label="History"
+          />
+          <TabButton 
+            active={activeTab === "details"} 
+            onClick={() => setActiveTab("details")}
+            icon={<User size={16} />}
+            label="Account Details"
+          />
+        </div>
+
+        {/* Content Area */}
+        <div className="space-y-6 pb-20">
+          {loading ? (
+            <div className="flex justify-center py-20">
+               <div className="w-12 h-12 border-2 border-brand-primary border-t-transparent rounded-full animate-spin" />
+            </div>
+          ) : activeTab === "details" ? (
+            <div className="reveal">
+              <div className="glass-panel p-10 border-white/5 relative overflow-hidden">
+                <div className="space-y-10">
+                  <div className="flex justify-between items-center">
+                    <h3 className="text-2xl font-bold tracking-tight">Identity Management</h3>
+                    <button 
+                      onClick={() => isEditing ? handleUpdateProfile() : setIsEditing(true)}
+                      className={`flex items-center gap-2 px-6 py-2 rounded-full font-luxury text-[10px] tracking-[0.2em] uppercase transition-all
+                        ${isEditing ? 'bg-brand-primary text-white shadow-lg' : 'bg-white/5 text-white/60 border border-white/10 hover:bg-white/10'}`}
+                    >
+                      {saving ? <div className="w-3 h-3 border-2 border-white/30 border-t-white rounded-full animate-spin" /> : isEditing ? <><Save size={14}/> Save Changes</> : <><Edit3 size={14}/> Edit Profile</>}
+                    </button>
+                  </div>
+
+                  {success && (
+                    <div className="p-4 bg-brand-primary/10 border border-brand-primary/20 rounded-2xl flex items-center gap-3 animate-in fade-in slide-in-from-top-2">
+                      <CheckCircle2 size={18} className="text-brand-primary" />
+                      <p className="text-sm text-brand-primary">Profile details updated successfully.</p>
+                    </div>
+                  )}
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    <div className="space-y-3">
+                      <label className="text-[10px] font-luxury tracking-[0.3em] text-white/30 uppercase ml-1 block">Account Username</label>
+                      <input 
+                        value={username}
+                        onChange={(e) => setUsername(e.target.value)}
+                        disabled={!isEditing}
+                        placeholder="Your display name"
+                        className="w-full bg-white/[0.03] border border-white/10 rounded-2xl p-4 text-white focus:border-brand-primary/50 outline-none transition-all disabled:opacity-50"
+                      />
+                    </div>
+                    <div className="space-y-3">
+                      <label className="text-[10px] font-luxury tracking-[0.3em] text-white/30 uppercase ml-1 block">Registered Email</label>
+                      <div className="w-full bg-white/[0.01] border border-white/5 rounded-2xl p-4 text-white/40 flex items-center gap-3">
+                        <Mail size={16} />
+                        <span className="truncate">{profile?.email}</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="pt-8 border-t border-white/5 flex items-center gap-4 opacity-20">
+                    <Shield size={16} />
+                    <p className="text-[9px] font-luxury tracking-[0.2em] uppercase leading-relaxed">
+                      All personal information is protected under Unmuted privacy protocols.
+                    </p>
+                  </div>
                 </div>
               </div>
             </div>
-          ))
-        )}
+          ) : filteredSessions.length === 0 ? (
+            <div className="glass-panel p-24 text-center border-dashed border-white/5 opacity-30 flex flex-col items-center gap-6">
+               <Wind size={48} className="opacity-20" />
+               <p className="font-luxury tracking-widest text-sm uppercase">No {activeTab} sessions found in your history.</p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 gap-6">
+              {filteredSessions.map(session => (
+                <div
+                  key={session.id}
+                  className="glass-panel p-8 border border-white/5 hover:border-brand-primary/30 transition-all duration-500 group relative overflow-hidden"
+                >
+                  <div className="absolute top-0 right-0 p-8 opacity-[0.02] group-hover:opacity-5 transition-opacity translate-x-4">
+                     <Wind size={120} />
+                  </div>
+
+                  <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-8 relative z-10">
+                    <div className="space-y-4">
+                      <div className="inline-flex items-center gap-2 px-3 py-1 bg-white/5 rounded-full border border-white/10">
+                         <span className={`w-1.5 h-1.5 rounded-full animate-pulse ${activeTab === 'upcoming' ? 'bg-brand-secondary' : 'bg-brand-primary'}`} />
+                         <span className="text-[9px] font-luxury tracking-widest text-white/60 uppercase">{session.status}</span>
+                      </div>
+                      <div>
+                        <h3 className="text-3xl font-bold tracking-tight">Counselor: {session.counsellorName}</h3>
+                        <div className="flex items-center gap-6 mt-2 text-white/40 font-light">
+                           <div className="flex items-center gap-2 font-luxury text-[10px] tracking-widest uppercase"><Calendar size={14} className="text-brand-primary"/> {session.date}</div>
+                           <div className="flex items-center gap-2 font-luxury text-[10px] tracking-widest uppercase"><Clock size={14} className="text-brand-primary"/> {session.time}</div>
+                        </div>
+                      </div>
+                    </div>
+
+                    <button className="p-4 rounded-2xl glass-panel border-white/5 hover:border-brand-primary/30 transition-all text-white/20 hover:text-brand-primary">
+                       <ChevronRight size={24} />
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+
+      <div className="absolute bottom-12 left-1/2 -translate-x-1/2 text-white/5 font-luxury text-[10px] tracking-[1.5em] uppercase pointer-events-none whitespace-nowrap">
+        P E R S O N A L • S U P P O R T
       </div>
     </div>
   );
 };
+
+const TabButton = ({ active, onClick, icon, label }: any) => (
+  <button
+    onClick={onClick}
+    className={`flex-1 flex items-center justify-center gap-2 py-4 text-[10px] font-luxury tracking-widest uppercase rounded-2xl transition-all duration-500 whitespace-nowrap px-6
+      ${active
+        ? "bg-brand-primary text-white shadow-xl shadow-brand-primary/20 scale-[1.02]"
+        : "text-white/40 hover:text-white/60"
+      }`}
+  >
+    {icon}
+    {label}
+  </button>
+);
 
 export default Profile;

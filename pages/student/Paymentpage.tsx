@@ -2,6 +2,7 @@ import { httpsCallable } from "firebase/functions";
 import { functions } from "../../firebase/firebase";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { Sparkles, ShieldCheck, Zap, Wind, CreditCard, ChevronRight } from "lucide-react";
 
 declare global {
     interface Window {
@@ -35,8 +36,8 @@ export default function PaymentPage() {
                 key: import.meta.env.VITE_RAZORPAY_KEY_ID,
                 amount,
                 currency: "INR",
-                name: "Counselling Session",
-                description: "Student Support Session",
+                name: "Unmuted Support",
+                description: "Private Counseling Session",
                 order_id: orderId,
 
                 handler: async (response: any) => {
@@ -44,7 +45,7 @@ export default function PaymentPage() {
                 },
 
                 theme: {
-                    color: "#2e7d32",
+                    color: "#10b981",
                 },
             };
 
@@ -52,7 +53,7 @@ export default function PaymentPage() {
             rzp.open();
 
         } catch (err: any) {
-            alert(err.message || "Payment failed");
+            alert(err.message || "Payment processing failed. Please check your credentials.");
             console.error(err);
         } finally {
             setLoading(false);
@@ -71,11 +72,11 @@ export default function PaymentPage() {
                 razorpay_signature: payment.razorpay_signature,
             });
 
-            alert("Payment successful 🎉");
+            alert("Session confirmed successfully 🎉");
             navigate(`/student/countdown?sessionId=${sessionId}`);
 
         } catch (err) {
-            alert("Payment verification failed");
+            alert("Verification failed. Please contact support.");
             console.error(err);
         } finally {
             setLoading(false);
@@ -83,178 +84,73 @@ export default function PaymentPage() {
     };
 
     return (
-        <>
-            <style>{css}</style>
+        <div className="relative min-h-screen w-full bg-[#0a0a0c] text-white flex items-center justify-center p-6 overflow-hidden">
+            {/* Background Glows */}
+            <div className="absolute top-[-10%] right-[-10%] w-[50%] h-[50%] bg-brand-primary opacity-5 blur-[150px] rounded-full animate-pulse-glow" />
             
-                <div className="payment-card">
-                    <div className="card-icon">💳</div>
-                    <h1 className="card-title">Complete Your Booking</h1>
-                    <p className="card-subtitle">Secure payment for your counselling session</p>
+            <div className="relative z-10 w-full max-w-[540px] reveal">
+                {/* Header */}
+                <div className="text-center mb-12">
+                    <div className="inline-flex items-center gap-2 px-3 py-1 glass-panel border border-white/10 rounded-full mb-6">
+                        <CreditCard size={14} className="text-brand-primary" />
+                        <span className="text-[10px] font-luxury uppercase tracking-[0.2em] text-white/60">Session Confirmation</span>
+                    </div>
+                    <h1 className="text-5xl font-bold tracking-tighter mb-4">Complete your <span className="text-gradient italic">booking</span></h1>
+                    <p className="text-white/40 text-lg font-light tracking-wide">Secure your appointment with professional support.</p>
+                </div>
 
-                    <div className="price-box">
-                        <span className="price-label">Session Fee</span>
-                        <span className="price-amount">₹49</span>
-                        <span className="price-note">30-minute session</span>
+                {/* Pricing Card */}
+                <div className="glass-panel p-10 border border-white/5 shadow-2xl relative overflow-hidden mb-10">
+                    <div className="absolute top-0 right-0 p-6 opacity-5">
+                        <Sparkles size={80} />
                     </div>
 
-                    <div className="features-box">
-                        <div className="feature-item">
-                            <span className="feature-check">✓</span>
-                            <span>Professional licensed counselor</span>
+                    <div className="bg-white/[0.03] rounded-3xl p-8 text-center mb-10 border border-white/5 shadow-inner">
+                        <span className="text-[10px] font-luxury tracking-[0.3em] text-brand-primary block mb-4 uppercase">Booking Fee</span>
+                        <div className="flex items-center justify-center gap-2">
+                            <span className="text-3xl font-light opacity-40 italic">₹</span>
+                            <span className="text-7xl font-bold tracking-tighter">49</span>
                         </div>
-                        <div className="feature-item">
-                            <span className="feature-check">✓</span>
-                            <span>100% private and secure</span>
-                        </div>
-                        <div className="feature-item">
-                            <span className="feature-check">✓</span>
-                            <span>Join from anywhere</span>
-                        </div>
+                        <p className="text-white/30 text-sm mt-4 font-light italic tracking-wider">Professional counseling per 30-min session</p>
+                    </div>
+
+                    <div className="space-y-6 mb-10">
+                        <Feature icon={<ShieldCheck size={18} className="text-brand-primary" />} text="Certified Peer Counselor" />
+                        <Feature icon={<Wind size={18} className="text-brand-secondary" />} text="Private & Secure Connection" />
+                        <Feature icon={<Zap size={18} className="text-brand-primary" />} text="Instant Portal Access" />
                     </div>
 
                     <button
-                        className="pay-btn"
+                        className="btn-action w-full py-5 text-xl shadow-brand-primary/20 group"
                         onClick={handlePayment}
                         disabled={loading}
                     >
-                        {loading ? "Processing..." : "Pay ₹49 Now"}
+                        <div className="flex items-center justify-center gap-3">
+                            <span>{loading ? "Confirming..." : "Process Payment"}</span>
+                            {!loading && <ChevronRight size={24} className="group-hover:translate-x-2 transition-transform" />}
+                        </div>
                     </button>
-
-                    <p className="secure-note">🔐 Secured by Razorpay</p>
                 </div>
-            
-        </>
+
+                <div className="text-center opacity-30 flex flex-col items-center gap-4">
+                    <div className="flex items-center gap-2">
+                        <ShieldCheck size={14} />
+                        <span className="text-[10px] font-luxury tracking-[0.2em] uppercase">Verified by Razorpay</span>
+                    </div>
+                    <p className="text-[9px] font-luxury tracking-[0.1em] uppercase leading-loose max-w-xs">
+                        All financial data is processed securely through industry-standard encryption protocols.
+                    </p>
+                </div>
+            </div>
+        </div>
     );
 }
 
-const css = `
-.payment-page {
-  min-height: 100vh;
-  padding: 40px 20px;
-  background: linear-gradient(135deg, #e8f5e9, #c8e6c9);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.payment-card {
-  background: white;
-  border-radius: 24px;
-  padding: 40px 32px;
-  width: 100%;
-  max-width: 420px;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
-  text-align: center;
-}
-
-.card-icon {
-  font-size: 56px;
-  margin-bottom: 16px;
-}
-
-.card-title {
-  font-size: 24px;
-  font-weight: 700;
-  color: #1b5e20;
-  margin: 0 0 8px 0;
-}
-
-.card-subtitle {
-  font-size: 14px;
-  color: #666;
-  margin: 0 0 28px 0;
-}
-
-.price-box {
-  background: linear-gradient(135deg, #e8f5e9, #c8e6c9);
-  border-radius: 16px;
-  padding: 24px;
-  margin-bottom: 24px;
-}
-
-.price-label {
-  display: block;
-  font-size: 12px;
-  color: #558b2f;
-  text-transform: uppercase;
-  letter-spacing: 1px;
-  margin-bottom: 4px;
-}
-
-.price-amount {
-  display: block;
-  font-size: 48px;
-  font-weight: 800;
-  color: #1b5e20;
-  margin-bottom: 4px;
-}
-
-.price-note {
-  font-size: 13px;
-  color: #558b2f;
-}
-
-.features-box {
-  text-align: left;
-  margin-bottom: 28px;
-}
-
-.feature-item {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 12px 0;
-  border-bottom: 1px solid #f0f0f0;
-  font-size: 14px;
-  color: #333;
-}
-
-.feature-item:last-child {
-  border-bottom: none;
-}
-
-.feature-check {
-  width: 24px;
-  height: 24px;
-  background: #e8f5e9;
-  color: #43a047;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 12px;
-  font-weight: 700;
-  flex-shrink: 0;
-}
-
-.pay-btn {
-  width: 100%;
-  padding: 18px;
-  background: linear-gradient(135deg, #43a047, #2e7d32);
-  color: white;
-  border: none;
-  border-radius: 50px;
-  font-size: 18px;
-  font-weight: 700;
-  cursor: pointer;
-  transition: all 0.2s;
-  box-shadow: 0 4px 16px rgba(46, 125, 50, 0.3);
-}
-
-.pay-btn:hover:not(:disabled) {
-  transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(46, 125, 50, 0.4);
-}
-
-.pay-btn:disabled {
-  background: #a5d6a7;
-  cursor: not-allowed;
-  box-shadow: none;
-}
-
-.secure-note {
-  margin-top: 16px;
-  font-size: 12px;
-  color: #9e9e9e;
-}
-`;
+const Feature = ({ icon, text }: { icon: any, text: string }) => (
+    <div className="flex items-center gap-4 py-4 border-b border-white/5 last:border-0 transition-all hover:translate-x-2">
+        <div className="w-10 h-10 bg-white/5 rounded-2xl flex items-center justify-center flex-shrink-0">
+            {icon}
+        </div>
+        <span className="text-lg font-light text-white/70 tracking-wide">{text}</span>
+    </div>
+);

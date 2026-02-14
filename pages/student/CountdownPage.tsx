@@ -1,34 +1,27 @@
 import React, { useEffect, useRef, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
-
-// 🔗 Backend (same logic, just JS versions)
 import CountdownBackend from "../../services/CountdownPage_backend";
-
-// Optional background wrapper
-
+import { Sparkles, Clock, Video, ChevronRight, CheckCircle2, User, Mail } from "lucide-react";
 
 const CountdownPage = ({ sessionId: propSessionId }: { sessionId?: string }) => {
     const navigate = useNavigate();
     const [searchParams] = useSearchParams();
     const sessionId = propSessionId || searchParams.get("sessionId");
     const backend = useRef(new CountdownBackend()).current;
-    const timerRef = useRef(null);
+    const timerRef = useRef<NodeJS.Timeout | null>(null);
 
     const [remaining, setRemaining] = useState(0);
     const [joinEnabled, setJoinEnabled] = useState(false);
 
-    // EXISTING FIELDS
     const [date, setDate] = useState("");
     const [time, setTime] = useState("");
     const [counsellor, setCounsellor] = useState("TBD");
-    const [sessionDateTime, setSessionDateTime] = useState(null);
+    const [sessionDateTime, setSessionDateTime] = useState<Date | null>(null);
 
-    // NEW FIELDS
     const [counsellorUsername, setCounsellorUsername] = useState("");
     const [counsellorEmail, setCounsellorEmail] = useState("");
 
-    // ---------------- HUMANIZE (UNCHANGED LOGIC) ----------------
-    const humanize = (seconds) => {
+    const humanize = (seconds: number) => {
         if (seconds <= 0) return "Starting now";
 
         const days = Math.floor(seconds / 86400);
@@ -37,304 +30,148 @@ const CountdownPage = ({ sessionId: propSessionId }: { sessionId?: string }) => 
 
         if (days >= 7) {
             const weeks = Math.floor(days / 7);
-            return weeks === 1
-                ? "Starts in 1 week"
-                : `Starts in ${weeks} weeks`;
+            return weeks === 1 ? "In 1 week" : `In ${weeks} weeks`;
         }
 
-        if (days >= 2) return `Starts in ${days} days`;
-        if (days === 1) return "Starts tomorrow";
-        if (hours >= 2) return `Starts in ${hours} hours`;
-        if (hours === 1) return "Starts in 1 hour";
-        if (minutes >= 2) return `Starts in ${minutes} minutes`;
-        if (minutes === 1) return "Starts in 1 minute";
+        if (days >= 2) return `In ${days} days`;
+        if (days === 1) return "Tomorrow";
+        if (hours >= 2) return `In ${hours} hours`;
+        if (hours === 1) return "In 1 hour";
+        if (minutes >= 2) return `In ${minutes} minutes`;
+        if (minutes === 1) return "In 1 minute";
 
         return "Starting now";
     };
 
-    // ---------------- LOAD SESSION ----------------
     useEffect(() => {
         loadSession();
-
         return () => {
             if (timerRef.current) clearInterval(timerRef.current);
         };
-        // eslint-disable-next-line
     }, []);
 
     const loadSession = async () => {
-        if (!sessionId) {
-            console.error("No sessionId found in URL or props");
-            return;
+        if (!sessionId) return;
+        try {
+            const data = await backend.getSessionDetails(sessionId);
+            setSessionDateTime(data.sessionTimestamp);
+            setDate(data.date);
+            setTime(data.time);
+            setCounsellor(data.counsellorInitials);
+            setCounsellorUsername(data.counsellorUsername || "");
+            setCounsellorEmail(data.counsellorEmail || "");
+
+            const rem = backend.getRemainingTime(data.sessionTimestamp);
+            setRemaining(rem);
+            setJoinEnabled(backend.canJoinSession(data.sessionTimestamp));
+            startCountdown(data.sessionTimestamp);
+        } catch (e) {
+            console.error("Failed to load session details", e);
         }
-        const data = await backend.getSessionDetails(sessionId);
-
-        setSessionDateTime(data.sessionTimestamp);
-        setDate(data.date);
-        setTime(data.time);
-        setCounsellor(data.counsellorInitials);
-
-        setCounsellorUsername(data.counsellorUsername || "");
-        setCounsellorEmail(data.counsellorEmail || "");
-
-        const rem = backend.getRemainingTime(data.sessionTimestamp);
-        setRemaining(rem);
-        setJoinEnabled(backend.canJoinSession(data.sessionTimestamp));
-
-        startCountdown(data.sessionTimestamp);
     };
 
-    // ---------------- COUNTDOWN ----------------
-    const startCountdown = (timestamp) => {
+    const startCountdown = (timestamp: Date) => {
         timerRef.current = setInterval(() => {
             const rem = backend.getRemainingTime(timestamp);
             setRemaining(rem);
             setJoinEnabled(backend.canJoinSession(timestamp));
-
-            if (rem <= 0) {
+            if (rem <= 0 && timerRef.current) {
                 clearInterval(timerRef.current);
             }
         }, 1000);
     };
 
-    // ---------------- JOIN HANDLER ----------------
     const handleJoin = async () => {
         try {
-            const link = await backend.getMeetingLink(sessionId);
-            await backend.markSessionLive(sessionId);
-
+            const link = await backend.getMeetingLink(sessionId!);
+            await backend.markSessionLive(sessionId!);
             window.open(link, "_blank", "noopener,noreferrer");
         } catch (e) {
-            alert(
-                "Unable to open meeting link. Please open it manually.\n" + e
-            );
+            alert("Unable to open meeting link. Please open it manually.\n" + e);
         }
     };
 
-    // ---------------- PREVENT BACK ----------------
-    useEffect(() => {
-        const blockBack = () => {
-            navigate("/home", { replace: true });
-        };
-        window.history.pushState(null, "", window.location.href);
-        window.onpopstate = blockBack;
-
-        return () => {
-            window.onpopstate = null;
-        };
-    }, [navigate]);
-
     return (
-        <div className="countdown-page">
-            <style>{`
-                .countdown-page {
-                    min-height: 100vh;
-                    background: linear-gradient(135deg, #e8f5e9 0%, #c8e6c9 100%); /* Light Green Gradient */
-                    display: flex;
-                    flex-direction: column;
-                    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-                    color: #2e7d32;
-                }
-
-                .app-bar {
-                    background: rgba(255, 255, 255, 0.9);
-                    padding: 1rem;
-                    text-align: center;
-                    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-                    backdrop-filter: blur(10px);
-                }
-
-                .app-bar h2 {
-                    margin: 0;
-                    font-size: 1.25rem;
-                    color: #1b5e20;
-                    font-weight: 600;
-                }
-
-                .content {
-                    flex: 1;
-                    display: flex;
-                    flex-direction: column;
-                    align-items: center;
-                    justify-content: center;
-                    padding: 2rem;
-                    gap: 1.5rem;
-                    max-width: 600px;
-                    margin: 0 auto;
-                    width: 100%;
-                }
-
-                .confirmed {
-                    display: flex;
-                    flex-direction: column;
-                    align-items: center;
-                    gap: 0.5rem;
-                    animation: popIn 0.5s ease;
-                }
-
-                .check {
-                    font-size: 3rem;
-                    color: #4caf50;
-                    background: #fff;
-                    width: 80px;
-                    height: 80px;
-                    border-radius: 50%;
-                    display: flex;
-                    align-items: center;
-                    justify-content: center;
-                    box-shadow: 0 4px 12px rgba(76, 175, 80, 0.2);
-                }
-
-                .confirmed h1 {
-                    margin: 0;
-                    font-size: 1.75rem;
-                    color: #1b5e20;
-                }
-
-                .status-pill {
-                    background: #fff;
-                    padding: 0.75rem 1.5rem;
-                    border-radius: 50px;
-                    font-weight: 600;
-                    box-shadow: 0 2px 8px rgba(0,0,0,0.05);
-                    text-align: center;
-                    min-width: 250px;
-                }
-
-                .status-pill.green {
-                    background: #e8f5e9;
-                    color: #2e7d32;
-                    border: 1px solid #a5d6a7;
-                }
-
-                .status-pill.orange {
-                    background: #fff3e0;
-                    color: #ef6c00;
-                    border: 1px solid #ffcc80;
-                }
-
-                .card {
-                    background: #fff;
-                    width: 100%;
-                    border-radius: 16px;
-                    padding: 1.5rem;
-                    box-shadow: 0 4px 6px rgba(0,0,0,0.05);
-                    display: flex;
-                    flex-direction: column;
-                    gap: 1rem;
-                }
-
-                .info-row {
-                    display: flex;
-                    justify-content: space-between;
-                    align-items: center;
-                    padding-bottom: 0.75rem;
-                    border-bottom: 1px solid #f0f0f0;
-                }
-
-                .info-row:last-child {
-                    border-bottom: none;
-                    padding-bottom: 0;
-                }
-
-                .info-row strong {
-                    color: #555;
-                    font-weight: 500;
-                }
-
-                .info-row span {
-                    font-weight: 600;
-                    color: #2e7d32;
-                }
-
-                .join-btn {
-                    width: 100%;
-                    padding: 1rem;
-                    border: none;
-                    border-radius: 12px;
-                    background: #2e7d32;
-                    color: white;
-                    font-size: 1.1rem;
-                    font-weight: bold;
-                    cursor: pointer;
-                    transition: all 0.2s;
-                    box-shadow: 0 4px 12px rgba(46, 125, 50, 0.2);
-                }
-
-                .join-btn:disabled {
-                    background: #a5d6a7;
-                    cursor: not-allowed;
-                    box-shadow: none;
-                    opacity: 0.7;
-                }
-
-                .join-btn:hover:not(:disabled) {
-                    background: #1b5e20;
-                    transform: translateY(-2px);
-                    box-shadow: 0 6px 16px rgba(46, 125, 50, 0.3);
-                }
-
-                @keyframes popIn {
-                    0% { transform: scale(0.8); opacity: 0; }
-                    100% { transform: scale(1); opacity: 1; }
-                }
-
-                @media (max-width: 480px) {
-                    .content { padding: 1.5rem; }
-                    .confirmed h1 { font-size: 1.5rem; }
-                }
-            `}</style>
-            <header className="app-bar">
-                <h2>Session Booked</h2>
-            </header>
-
-            <div className="content">
-                <div className="confirmed">
-                    <span className="check">✔</span>
-                    <h1>Session Confirmed</h1>
+        <div className="relative min-h-screen w-full bg-[#0a0a0c] text-white flex flex-col p-6 overflow-x-hidden">
+            {/* Background Glows */}
+            <div className="absolute top-[20%] left-[-10%] w-[60%] h-[60%] bg-brand-primary opacity-[0.03] blur-[150px] rounded-full animate-pulse-glow" />
+            
+            <div className="relative z-10 max-w-4xl mx-auto w-full flex flex-grow flex-col justify-center reveal">
+                {/* Status Header */}
+                <div className="text-center mb-16">
+                    <div className="w-20 h-20 bg-green-500/10 rounded-full flex items-center justify-center mx-auto mb-8 border border-green-500/20 animate-subtle-float shadow-[0_0_40px_rgba(34,197,94,0.1)]">
+                        <CheckCircle2 size={40} className="text-green-500" />
+                    </div>
+                    <h1 className="text-6xl font-bold tracking-tighter mb-4">Session <span className="text-gradient italic">Confirmed</span></h1>
+                    
+                    <div className={`inline-flex items-center gap-3 px-6 py-2 rounded-full glass-panel border mt-6 transition-all duration-700
+                        ${joinEnabled ? 'border-green-500/50 shadow-[0_0_30px_rgba(34,197,94,0.2)]' : 'border-brand-primary/30'}
+                    `}>
+                        {joinEnabled ? (
+                            <div className="w-2 h-2 rounded-full bg-green-500 animate-ping" />
+                        ) : (
+                            <Clock size={14} className="text-brand-primary" />
+                        )}
+                        <span className={`text-xs font-luxury uppercase tracking-[0.3em] font-bold ${joinEnabled ? 'text-green-500' : 'text-brand-primary'}`}>
+                            {joinEnabled ? "The portal is open" : humanize(remaining)}
+                        </span>
+                    </div>
                 </div>
 
-                <div
-                    className={`status-pill ${joinEnabled ? "green" : "orange"
-                        }`}
-                >
-                    {joinEnabled
-                        ? "You can now join the session"
-                        : humanize(remaining)}
+                {/* Details Card */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-16">
+                    <div className="glass-panel p-10 border border-white/5 space-y-8">
+                        <h3 className="text-sm font-luxury tracking-[0.4em] text-white/30 uppercase border-b border-white/5 pb-4">Schedule</h3>
+                        <div className="space-y-6">
+                            <InfoItem label="Date" value={date} />
+                            <InfoItem label="Session Time" value={time} />
+                        </div>
+                    </div>
+
+                    <div className="glass-panel p-10 border border-white/5 space-y-8">
+                        <h3 className="text-sm font-luxury tracking-[0.4em] text-white/30 uppercase border-b border-white/5 pb-4">Counselor</h3>
+                        <div className="space-y-6">
+                            <InfoItem label="Name" value={counsellorUsername || counsellor} icon={<User size={14}/>} />
+                            <InfoItem label="Contact" value={counsellorEmail || "Encrypted"} icon={<Mail size={14}/>} />
+                        </div>
+                    </div>
                 </div>
 
-                <div className="card">
-                    <InfoRow label="Date" value={date} />
-                    <InfoRow label="Time" value={time} />
-                    <InfoRow label="Counsellor Initials" value={counsellor} />
-
-                    {counsellorUsername && (
-                        <InfoRow label="Name" value={counsellorUsername} />
-                    )}
-
-                    {counsellorEmail && (
-                        <InfoRow label="Email" value={counsellorEmail} />
+                {/* Join CTA */}
+                <div className="max-w-md mx-auto w-full mb-12">
+                    <button
+                        className={`btn-action w-full py-6 text-xl flex items-center justify-center gap-4 transition-all duration-700 shadow-2xl
+                            ${joinEnabled ? 'bg-green-600 shadow-green-500/30' : 'bg-white/5 text-white/20 border border-white/10 cursor-not-allowed grayscale'}
+                        `}
+                        disabled={!joinEnabled}
+                        onClick={handleJoin}
+                    >
+                        <Video size={24} />
+                        <span>Join Session Now</span>
+                        <ChevronRight size={24} />
+                    </button>
+                    {!joinEnabled && (
+                        <p className="text-center mt-6 text-[10px] font-luxury tracking-[0.2em] text-white/20 uppercase">
+                            Join button activates 5 minutes before your time
+                        </p>
                     )}
                 </div>
+            </div>
 
-                <button
-                    className="join-btn"
-                    disabled={!joinEnabled}
-                    onClick={handleJoin}
-                >
-                    Join Now
-                </button>
+            <div className="absolute bottom-12 left-1/2 -translate-x-1/2 text-white/5 font-luxury text-[10px] tracking-[1.5em] uppercase pointer-events-none whitespace-nowrap">
+                U N M U T E D • S U P P O R T
             </div>
         </div>
-
     );
 };
 
-// ---------------- INFO ROW ----------------
-const InfoRow = ({ label, value }) => (
-    <div className="info-row">
-        <strong>{label}:</strong>
-        <span>{value}</span>
+const InfoItem = ({ label, value, icon }: { label: string, value: string, icon?: any }) => (
+    <div className="space-y-1 group">
+        <p className="text-[10px] font-luxury tracking-[0.2em] text-brand-secondary uppercase opacity-60 group-hover:opacity-100 transition-opacity">{label}</p>
+        <div className="flex items-center gap-3">
+            {icon && <div className="text-white/20 group-hover:text-brand-secondary transition-colors">{icon}</div>}
+            <p className="text-2xl font-light tracking-tight truncate">{value}</p>
+        </div>
     </div>
 );
 

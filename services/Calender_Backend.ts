@@ -1,5 +1,4 @@
 import {
-  getFirestore,
   collection,
   query,
   where,
@@ -9,6 +8,7 @@ import {
   serverTimestamp,
   Timestamp,
 } from "firebase/firestore";
+import { db } from "../firebase/firebase";
 
 interface SlotCounsellor {
   counsellorId: string;
@@ -21,7 +21,7 @@ interface SlotCounsellor {
 type SlotsMap = Record<string, SlotCounsellor[]>;
 
 class CalendarBackend {
-  private db = getFirestore();
+  private db = db;
 
   /**
    * Fetch all available slots for a specific date

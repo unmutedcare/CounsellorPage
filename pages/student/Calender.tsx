@@ -1,6 +1,7 @@
-import { useMemo, useState, useEffect } from "react";
+import { useMemo, useState, useEffect, useRef } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import CalendarBackend from "../../services/Calender_Backend";
+import { Sparkles, Calendar as CalendarIcon, Clock, ChevronRight, Wind, ChevronLeft } from "lucide-react";
 
 interface CalendarPageProps {
   sessionId?: string;
@@ -12,12 +13,13 @@ const CalendarPage: React.FC<CalendarPageProps> = ({ sessionId }) => {
   const backend = useMemo(() => new CalendarBackend(), []);
   const navigate = useNavigate();
   const location = useLocation();
+  const scrollRef = useRef<HTMLDivElement>(null);
 
   const currentSessionId = sessionId || (location.state?.sessionId as string);
 
   useEffect(() => {
     if (!currentSessionId) {
-      navigate("/dashboard");
+      navigate("/student/dashboard");
     }
   }, [currentSessionId, navigate]);
 
@@ -26,7 +28,22 @@ const CalendarPage: React.FC<CalendarPageProps> = ({ sessionId }) => {
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [selectedTime, setSelectedTime] = useState<string | null>(null);
 
-  const today = new Date();
+  const availableDates = useMemo(() => {
+    const dates: Date[] = [];
+    const today = new Date();
+    for (let i = 0; i < 30; i++) {
+      const d = new Date();
+      d.setDate(today.getDate() + i);
+      dates.push(d);
+    }
+    return dates;
+  }, []);
+
+  useEffect(() => {
+    if (!selectedDate) {
+      handleDateSelect(availableDates[0]);
+    }
+  }, []);
 
   const slotDateTime = (date: Date, time: string): Date => {
     let hour = 0;
@@ -55,19 +72,7 @@ const CalendarPage: React.FC<CalendarPageProps> = ({ sessionId }) => {
     );
   };
 
-  const showConfirmationDialog = (
-    date: string,
-    time: string,
-    counsellorInitials: string
-  ): boolean => {
-    return window.confirm(
-      `Confirm Session\n\nDate: ${date}\nTime: ${time}\nCounsellor: ${counsellorInitials}\n\nAre you happy with this timing?`
-    );
-  };
-
   const handleDateSelect = async (date: Date) => {
-    if (isNaN(date.getTime())) return;
-
     try {
       setSelectedDate(date);
       setSelectedTime(null);
@@ -91,7 +96,7 @@ const CalendarPage: React.FC<CalendarPageProps> = ({ sessionId }) => {
 
       setSlots(filtered);
     } catch (err) {
-      alert("Failed to load slots");
+      alert("Failed to load available slots. Please try again.");
       console.error(err);
     } finally {
       setIsLoadingSlots(false);
@@ -115,13 +120,7 @@ const CalendarPage: React.FC<CalendarPageProps> = ({ sessionId }) => {
       selectedDate.getMonth() + 1
     ).padStart(2, "0")}-${String(selectedDate.getDate()).padStart(2, "0")}`;
 
-    const confirmed = showConfirmationDialog(
-      dateStr,
-      time,
-      counsellor.initials
-    );
-
-    if (!confirmed) return;
+    if (!window.confirm(`Confirm your session for ${dateStr} at ${time}?`)) return;
 
     try {
       await backend.bookSlot({
@@ -135,233 +134,159 @@ const CalendarPage: React.FC<CalendarPageProps> = ({ sessionId }) => {
 
       navigate(`/student/payment?sessionId=${currentSessionId}`);
     } catch (err) {
-      alert("Booking failed. Please try again.");
+      alert("Scheduling failed. Please check your connection.");
       console.error(err);
     }
   };
 
+  const scroll = (direction: 'left' | 'right') => {
+    if (scrollRef.current) {
+      const { scrollLeft, clientWidth } = scrollRef.current;
+      const scrollTo = direction === 'left' ? scrollLeft - clientWidth / 2 : scrollLeft + clientWidth / 2;
+      scrollRef.current.scrollTo({ left: scrollTo, behavior: 'smooth' });
+    }
+  };
+
   return (
-    <>
-      <style>{css}</style>
+    <div className="relative min-h-screen w-full bg-[#0a0a0c] text-white flex flex-col p-6 overflow-x-hidden">
+      {/* Background Accents */}
+      <div className="absolute top-[15%] right-[-10%] w-[50%] h-[50%] bg-brand-secondary opacity-5 blur-[150px] rounded-full" />
       
-        <div className="calendar-card">
-          <h1 className="card-title">📅 Select Date & Time</h1>
+      <div className="relative z-10 max-w-5xl mx-auto w-full flex flex-grow flex-col reveal">
+        {/* Header */}
+        <div className="text-center mb-12 mt-8">
+          <div className="inline-flex items-center gap-2 px-3 py-1 glass-panel border border-white/10 rounded-full mb-6">
+            <CalendarIcon size={14} className="text-brand-secondary" />
+            <span className="text-[10px] font-luxury uppercase tracking-[0.2em] text-white/60">Professional Scheduling</span>
+          </div>
+          <h2 className="text-5xl md:text-7xl font-bold tracking-tighter mb-4">
+            Select your <span className="text-gradient italic">slot</span>
+          </h2>
+          <p className="text-white/40 text-lg font-light tracking-wide">
+            Choose a convenient time for your private session.
+          </p>
+        </div>
 
-          <div className="date-section">
-            <label className="section-label">Choose a Date</label>
-            <input
-              type="date"
-              onChange={(e) => handleDateSelect(new Date(e.target.value))}
-              min={today.toISOString().split("T")[0]}
-              max={new Date(today.getTime() + 30 * 86400000)
-                .toISOString()
-                .split("T")[0]}
-              className="date-input"
-            />
+        {/* Date Scroller */}
+        <div className="relative mb-12 group">
+          <button 
+            onClick={() => scroll('left')}
+            className="absolute left-[-20px] top-1/2 -translate-y-1/2 z-20 p-2 glass-panel border-white/10 opacity-0 group-hover:opacity-100 transition-opacity hidden md:block"
+          >
+            <ChevronLeft size={20} />
+          </button>
+          
+          <div 
+            ref={scrollRef}
+            className="flex gap-4 overflow-x-auto no-scrollbar pb-4 px-2"
+          >
+            {availableDates.map((date, i) => {
+              const isSelected = selectedDate?.toDateString() === date.toDateString();
+              const dayName = date.toLocaleDateString('en-US', { weekday: 'short' });
+              const dayNum = date.getDate();
+              const monthName = date.toLocaleDateString('en-US', { month: 'short' });
+
+              return (
+                <button
+                  key={i}
+                  onClick={() => handleDateSelect(date)}
+                  className={`flex-shrink-0 w-20 h-28 rounded-3xl flex flex-col items-center justify-center transition-all duration-500 border
+                    ${isSelected 
+                      ? "bg-brand-secondary border-brand-secondary shadow-lg shadow-brand-secondary/30 scale-105" 
+                      : "glass-panel border-white/5 hover:border-white/20"}
+                  `}
+                >
+                  <span className={`text-[10px] font-luxury tracking-widest uppercase mb-2 ${isSelected ? 'text-white' : 'text-white/40'}`}>{dayName}</span>
+                  <span className="text-2xl font-bold mb-1">{dayNum}</span>
+                  <span className={`text-[9px] font-luxury tracking-[0.2em] uppercase ${isSelected ? 'text-white/80' : 'text-white/20'}`}>{monthName}</span>
+                </button>
+              );
+            })}
           </div>
 
-          <div className="slots-section">
-            <label className="section-label">Available Timings</label>
+          <button 
+            onClick={() => scroll('right')}
+            className="absolute right-[-20px] top-1/2 -translate-y-1/2 z-20 p-2 glass-panel border-white/10 opacity-0 group-hover:opacity-100 transition-opacity hidden md:block"
+          >
+            <ChevronRight size={20} />
+          </button>
+        </div>
 
-            {!selectedDate && (
-              <p className="placeholder-text">Please select a date first.</p>
-            )}
+        {/* Slots Section */}
+        <div className="flex-grow">
+          <div className="glass-panel p-8 border border-white/5 min-h-[400px]">
+             <div className="flex items-center justify-between mb-8">
+                <label className="text-[10px] font-luxury uppercase tracking-[0.3em] text-brand-secondary uppercase">Availability Map</label>
+                {selectedDate && (
+                  <span className="text-[10px] font-luxury tracking-widest text-white/30 uppercase">
+                    {selectedDate.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}
+                  </span>
+                )}
+             </div>
 
-            {selectedDate && isLoadingSlots && (
-              <div className="loading-text">Loading...</div>
-            )}
-
-            {selectedDate && !isLoadingSlots && Object.keys(slots).length === 0 && (
-              <p className="placeholder-text">No available slots for this date.</p>
-            )}
-
-            {selectedDate && !isLoadingSlots && Object.keys(slots).length > 0 && (
-              <div className="slots-list">
-                {Object.entries(slots).map(([time, counsellors]) => (
-                  <div key={time} className="time-group">
-                    <p className="time-label">{time}</p>
-                    <div className="counsellors-row">
-                      {counsellors.map((c) => {
-                        const key = `${time}_${c.docId}`;
-                        const selected = selectedTime === key;
-
-                        return (
-                          <button
-                            key={c.docId}
-                            onClick={() => setSelectedTime(key)}
-                            className={`counsellor-btn ${selected ? "selected" : ""}`}
-                          >
-                            {c.initials}
-                          </button>
-                        );
-                      })}
+             {isLoadingSlots ? (
+                <div className="flex flex-col items-center justify-center py-24 gap-4">
+                  <div className="w-12 h-12 border-2 border-brand-secondary border-t-transparent rounded-full animate-spin shadow-[0_0_20px_rgba(99,102,241,0.3)]" />
+                  <p className="text-[10px] font-luxury tracking-widest text-white/20 uppercase animate-pulse">Fetching Appointments...</p>
+                </div>
+             ) : Object.keys(slots).length === 0 ? (
+                <div className="flex flex-col items-center justify-center py-24 text-white/20 text-center">
+                  <Wind size={48} className="mb-6 opacity-30 animate-pulse" />
+                  <p className="font-luxury tracking-widest text-sm uppercase max-w-xs">No available slots for the selected date. Please choose another day.</p>
+                </div>
+             ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 reveal">
+                  {Object.entries(slots).map(([time, counsellors]) => (
+                    <div key={time} className="glass-panel p-6 border-white/5 group hover:border-white/10 transition-all bg-white/[0.01]">
+                      <div className="flex items-center gap-3 mb-6">
+                         <div className="w-8 h-8 rounded-full bg-brand-secondary/10 flex items-center justify-center">
+                            <Clock size={14} className="text-brand-secondary" />
+                         </div>
+                         <span className="text-xl font-bold tracking-tight">{time}</span>
+                      </div>
+                      <div className="flex flex-wrap gap-2">
+                        {counsellors.map((c) => {
+                          const key = `${time}_${c.docId}`;
+                          const isSelected = selectedTime === key;
+                          return (
+                            <button
+                              key={c.docId}
+                              onClick={() => setSelectedTime(key)}
+                              className={`px-4 py-2 rounded-xl font-luxury text-[9px] tracking-widest uppercase transition-all duration-500 flex items-center gap-2
+                                ${isSelected 
+                                  ? "bg-brand-secondary text-white shadow-lg shadow-brand-secondary/30 scale-105" 
+                                  : "bg-white/5 text-white/40 hover:bg-white/10 hover:text-white border border-white/5"}
+                              `}
+                            >
+                              <div className={`w-1.5 h-1.5 rounded-full ${isSelected ? 'bg-white animate-pulse' : 'bg-brand-secondary'}`} />
+                              {c.initials}
+                            </button>
+                          );
+                        })}
+                      </div>
                     </div>
-                  </div>
-                ))}
-              </div>
-            )}
+                  ))}
+                </div>
+             )}
           </div>
+        </div>
 
+        {/* Footer CTA */}
+        <div className="mt-12 pb-12 w-full max-w-md mx-auto">
           <button
             disabled={!selectedDate || !selectedTime}
             onClick={handleConfirm}
-            className="confirm-btn"
+            className={`btn-action w-full flex items-center justify-center gap-4 text-xl py-6 shadow-2xl transition-all duration-700
+              ${(!selectedDate || !selectedTime) ? 'opacity-20 cursor-not-allowed grayscale' : 'shadow-brand-secondary/20'}
+            `}
           >
-            Confirm Booking
+            <span>Confirm Appointment</span>
+            <ChevronRight size={24} />
           </button>
         </div>
-      
-    </>
+      </div>
+    </div>
   );
 };
 
 export default CalendarPage;
-
-const css = `
-.calendar-page {
-  min-height: 100vh;
-  padding: 40px 20px;
-  background: linear-gradient(135deg, #e8f5e9, #c8e6c9);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.calendar-card {
-  background: white;
-  border-radius: 24px;
-  padding: 32px;
-  width: 100%;
-  max-width: 500px;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
-}
-
-.card-title {
-  font-size: 24px;
-  font-weight: 700;
-  color: #1b5e20;
-  text-align: center;
-  margin: 0 0 28px 0;
-}
-
-.section-label {
-  display: block;
-  font-size: 14px;
-  font-weight: 600;
-  color: #2e7d32;
-  margin-bottom: 10px;
-}
-
-.date-section {
-  margin-bottom: 24px;
-}
-
-.date-input {
-  width: 100%;
-  padding: 14px 16px;
-  border: 2px solid #e0e0e0;
-  border-radius: 12px;
-  font-size: 16px;
-  background: #fafafa;
-  transition: all 0.2s;
-}
-
-.date-input:focus {
-  outline: none;
-  border-color: #43a047;
-  background: white;
-}
-
-.slots-section {
-  margin-bottom: 24px;
-}
-
-.placeholder-text {
-  color: #9e9e9e;
-  font-size: 14px;
-  text-align: center;
-  padding: 20px;
-  background: #f5f5f5;
-  border-radius: 12px;
-}
-
-.loading-text {
-  text-align: center;
-  color: #2e7d32;
-  padding: 20px;
-}
-
-.slots-list {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-  max-height: 300px;
-  overflow-y: auto;
-}
-
-.time-group {
-  background: #f5f5f5;
-  border-radius: 12px;
-  padding: 14px;
-}
-
-.time-label {
-  font-weight: 700;
-  color: #1b5e20;
-  margin: 0 0 10px 0;
-}
-
-.counsellors-row {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-}
-
-.counsellor-btn {
-  padding: 10px 20px;
-  background: white;
-  border: 2px solid #e0e0e0;
-  border-radius: 50px;
-  font-size: 14px;
-  font-weight: 600;
-  color: #1b5e20;
-  cursor: pointer;
-  transition: all 0.2s;
-}
-
-.counsellor-btn:hover {
-  border-color: #43a047;
-  background: #e8f5e9;
-}
-
-.counsellor-btn.selected {
-  background: #43a047;
-  border-color: #43a047;
-  color: white;
-}
-
-.confirm-btn {
-  width: 100%;
-  padding: 16px;
-  background: linear-gradient(135deg, #43a047, #2e7d32);
-  color: white;
-  border: none;
-  border-radius: 50px;
-  font-size: 17px;
-  font-weight: 700;
-  cursor: pointer;
-  transition: all 0.2s;
-  box-shadow: 0 4px 16px rgba(46, 125, 50, 0.3);
-}
-
-.confirm-btn:hover:not(:disabled) {
-  transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(46, 125, 50, 0.4);
-}
-
-.confirm-btn:disabled {
-  background: #a5d6a7;
-  cursor: not-allowed;
-  box-shadow: none;
-}
-`;

@@ -1,9 +1,9 @@
 import {
-  getFirestore,
   doc,
   updateDoc,
   serverTimestamp,
 } from "firebase/firestore";
+import { db } from "../firebase/firebase";
 
 interface SaveDescriptionParams {
   sessionId: string;
@@ -11,7 +11,7 @@ interface SaveDescriptionParams {
 }
 
 class ProblemDescriptionBackend {
-  private db = getFirestore();
+  private db = db;
 
   /**
    * Save or update the problem description for a VideoCallSession

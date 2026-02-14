@@ -81,8 +81,11 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       }}
     >
       {loading ? (
-        <div className="flex items-center justify-center min-h-screen bg-gray-50">
-          <div className="text-xl font-semibold text-gray-700">Loading unmuted...</div>
+        <div className="flex items-center justify-center min-h-screen bg-[#0a0a0c]">
+          <div className="flex flex-col items-center gap-6">
+            <div className="w-16 h-16 border-2 border-[#ff2d55] border-t-transparent rounded-full animate-spin shadow-[0_0_30px_rgba(255,45,85,0.2)]" />
+            <div className="text-sm font-luxury tracking-[0.5em] text-white opacity-40 uppercase animate-pulse">Entering Sanctuary...</div>
+          </div>
         </div>
       ) : (
         children

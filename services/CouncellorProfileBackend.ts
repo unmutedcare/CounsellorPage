@@ -1,15 +1,14 @@
-import { getAuth } from "firebase/auth";
 import {
-  getFirestore,
   doc,
   getDoc,
   updateDoc,
   Timestamp,
 } from "firebase/firestore";
+import { auth, db as firestore } from "../firebase/firebase";
 
 export class CounsellorProfileBackend {
-  private firestore = getFirestore();
-  private auth = getAuth();
+  private firestore = firestore;
+  private auth = auth;
 
   /**
    * Save initials + meeting link to Firestore

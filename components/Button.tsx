@@ -1,7 +1,7 @@
 import React from 'react';
 
 interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
-  variant?: 'primary' | 'secondary' | 'outline' | 'ghost' | 'counselor-primary' | 'counselor-secondary';
+  variant?: 'primary' | 'secondary' | 'outline' | 'ghost' | 'action' | 'luxury';
   fullWidth?: boolean;
 }
 
@@ -12,22 +12,20 @@ const Button: React.FC<ButtonProps> = ({
   className = '', 
   ...props 
 }) => {
-  const baseStyles = "px-7 py-2 rounded-full font-bold text-lg transition-transform active:scale-70 shadow-lg flex items-center justify-center gap-2";
+  const baseStyles = "px-8 py-3 rounded-full font-bold transition-all active:scale-95 flex items-center justify-center gap-3 cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed";
   
   const variants = {
-    primary: "bg-[#7CAB48] text-white hover:bg-[#6a943e]", // Muted green (Student)
-    secondary: "bg-[#5B8C5A] text-white hover:bg-[#4a7349]", // Darker green
-    outline: "border-2 border-[#7CAB48] text-[#7CAB48] bg-transparent hover:bg-[#7CAB48]/10",
-    ghost: "bg-transparent text-gray-600 shadow-none hover:bg-black/5",
-    
-    // Counselor specific colors based on screenshot
-    'counselor-primary': "bg-orange-500 text-white hover:bg-orange-600",
-    'counselor-secondary': "bg-[#6BCB77] text-white hover:bg-[#5ab565]", // Fresh green
+    primary: "bg-[#10b981] text-white hover:shadow-[0_0_30px_rgba(16,185,129,0.4)] hover:scale-[1.02]",
+    secondary: "bg-white/5 text-white/70 border border-white/10 hover:bg-white/10 hover:text-white",
+    outline: "border border-[#10b981]/50 text-[#10b981] bg-transparent hover:bg-[#10b981]/10",
+    ghost: "bg-transparent text-white/40 hover:text-white hover:bg-white/5 shadow-none",
+    action: "bg-[#6366f1] text-white hover:shadow-[0_0_30px_rgba(99,102,241,0.4)] hover:scale-[1.02]",
+    luxury: "font-luxury text-[10px] tracking-[0.3em] uppercase bg-white text-black hover:bg-white/90",
   };
 
   return (
     <button
-      className={`${baseStyles} ${variants[variant]} ${fullWidth ? 'w-full' : ''} ${props.disabled ? 'opacity-50 cursor-not-allowed' : ''} ${className}`}
+      className={`${baseStyles} ${variants[variant]} ${fullWidth ? 'w-full' : ''} ${className}`}
       {...props}
     >
       {children}

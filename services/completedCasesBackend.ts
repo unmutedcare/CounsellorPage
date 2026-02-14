@@ -1,5 +1,4 @@
 import {
-  getFirestore,
   collection,
   query,
   where,
@@ -7,6 +6,7 @@ import {
   getDocs,
   Timestamp,
 } from "firebase/firestore";
+import { db } from "../firebase/firebase";
 
 /* ---------------------------------------------
    Types
@@ -18,12 +18,6 @@ export interface CompletedCase {
   date: string;
   description: string;
 }
-
-/* ---------------------------------------------
-   Firestore Instance
---------------------------------------------- */
-
-const db = getFirestore();
 
 /* ---------------------------------------------
    Fetch Completed Cases

@@ -1,13 +1,13 @@
 import {
-  getFirestore,
   doc,
   getDoc,
   updateDoc,
   serverTimestamp,
 } from "firebase/firestore";
+import { db } from "../firebase/firebase";
 
 class CountdownBackend {
-  private db = getFirestore();
+  private db = db;
 
   constructor() {
     // db is already initialized above

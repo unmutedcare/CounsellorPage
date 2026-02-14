@@ -1,5 +1,4 @@
 import {
-  getFirestore,
   doc,
   collection,
   getDoc,
@@ -12,13 +11,14 @@ import {
   updateDoc,
   setDoc,
 } from "firebase/firestore";
+import { db } from "../firebase/firebase";
 
 export interface TimingsMap {
   [date: string]: string[];
 }
 
 export class CounsellorTimingBackend {
-  private db = getFirestore();
+  private db = db;
 
   constructor(private counsellorId: string) {}
 

@@ -1,6 +1,7 @@
 import { useMemo, useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import ProblemDescriptionBackend from "../../services/Student_Problem_Description_BackEnd";
+import { Sparkles, ArrowRight, MessageSquare, FastForward } from "lucide-react";
 
 interface ProblemDescriptionPageProps {
   sessionId?: string;
@@ -25,7 +26,7 @@ const ProblemDescriptionPage: React.FC<
 
   useEffect(() => {
     if (!currentSessionId) {
-      navigate("/dashboard");
+      navigate("/student/dashboard");
     }
   }, [currentSessionId, navigate]);
 
@@ -76,147 +77,66 @@ const ProblemDescriptionPage: React.FC<
   };
 
   return (
-    <>
-      <style>{css}</style>
-      <div className="problem-card">
-        <div className="card-icon">✍️</div>
-        <h1 className="card-title">Describe Your Feelings</h1>
-        <p className="card-subtitle">Share what's on your mind (optional)</p>
+    <div className="relative min-h-screen w-full bg-[#0a0a0c] text-white flex flex-col items-center justify-center p-6 overflow-x-hidden">
+      {/* Background Accents */}
+      <div className="absolute top-[-10%] right-[-10%] w-[50%] h-[50%] bg-[#ff2d55] opacity-5 blur-[150px] rounded-full" />
+      
+      <div className="relative z-10 w-full max-w-2xl reveal">
+        {/* Header */}
+        <div className="text-center mb-12">
+          <div className="inline-flex items-center gap-2 px-3 py-1 glass-panel border border-white/10 rounded-full mb-6">
+            <Sparkles size={14} className="text-[#ff2d55]" />
+            <span className="text-[10px] font-luxury uppercase tracking-[0.2em] text-white/60">Unfilter Your Mind</span>
+          </div>
+          <h1 className="text-5xl font-bold tracking-tighter mb-4">
+            Describe your <span className="text-gradient italic">truth</span>
+          </h1>
+          <p className="text-white/40 text-xl font-light tracking-wide">
+            Share the weight on your heart. We are listening deeply.
+          </p>
+        </div>
 
-        <textarea
-          value={problemText}
-          onChange={(e) => setProblemText(e.target.value)}
-          placeholder="I've been feeling..."
-          className="problem-textarea"
-          rows={6}
-        />
+        {/* Textarea Card */}
+        <div className="glass-panel p-8 border border-white/5 shadow-2xl relative overflow-hidden mb-12 group">
+          <div className="absolute top-6 left-6 opacity-20 text-[#ff2d55] group-focus-within:opacity-100 transition-opacity">
+            <MessageSquare size={24} />
+          </div>
+          <textarea
+            value={problemText}
+            onChange={(e) => setProblemText(e.target.value)}
+            placeholder="I've been feeling... (completely optional)"
+            className="w-full bg-transparent border-none text-white text-2xl font-light placeholder:text-white/10 outline-none resize-none pt-2 min-h-[240px]"
+            autoFocus
+          />
+        </div>
 
-        <div className="buttons-row">
+        {/* Interaction Row */}
+        <div className="flex flex-col sm:flex-row gap-6 w-full max-w-md mx-auto">
           <button
             disabled={loading}
             onClick={skipProblem}
-            className="skip-btn"
+            className="flex-1 flex items-center justify-center gap-3 py-5 rounded-full border border-white/10 hover:bg-white/5 transition-all text-white/60 hover:text-white font-luxury text-xs tracking-[0.2em] uppercase"
           >
+            <FastForward size={18} />
             Skip
           </button>
 
           <button
             disabled={loading}
             onClick={submitProblem}
-            className="submit-btn"
+            className="flex-[2] btn-action flex items-center justify-center gap-3 text-lg py-4 shadow-brand-primary/20"
           >
-            {loading ? "Saving..." : "Continue"}
+            <span>{loading ? "Transcribing..." : "Continue"}</span>
+            <ArrowRight size={20} />
           </button>
         </div>
       </div>
-    </>
+
+      <div className="absolute bottom-12 text-white/5 font-luxury text-[10px] tracking-[1em] uppercase">
+        CONFIDENTIAL • SECURE • PRIVATE
+      </div>
+    </div>
   );
 };
 
 export default ProblemDescriptionPage;
-
-const css = `
-.problem-card {
-  background: white;
-  border-radius: 24px;
-  padding: 40px 32px;
-  width: 100%;
-  max-width: 500px;
-  margin: 40px auto;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
-  text-align: center;
-}
-
-.card-icon {
-  font-size: 56px;
-  margin-bottom: 16px;
-}
-
-.card-title {
-  font-size: 24px;
-  font-weight: 700;
-  color: #1b5e20;
-  margin: 0 0 8px 0;
-}
-
-.card-subtitle {
-  font-size: 14px;
-  color: #666;
-  margin: 0 0 28px 0;
-}
-
-.problem-textarea {
-  width: 100%;
-  padding: 16px;
-  border: 2px solid #e0e0e0;
-  border-radius: 16px;
-  font-size: 16px;
-  font-family: inherit;
-  resize: none;
-  background: #fafafa;
-  transition: all 0.2s;
-  margin-bottom: 24px;
-}
-
-.problem-textarea:focus {
-  outline: none;
-  border-color: #43a047;
-  background: white;
-}
-
-.problem-textarea::placeholder {
-  color: #9e9e9e;
-}
-
-.buttons-row {
-  display: flex;
-  gap: 12px;
-}
-
-.skip-btn {
-  flex: 1;
-  padding: 14px;
-  background: #f5f5f5;
-  color: #666;
-  border: none;
-  border-radius: 50px;
-  font-size: 16px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.2s;
-}
-
-.skip-btn:hover:not(:disabled) {
-  background: #e0e0e0;
-}
-
-.skip-btn:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-}
-
-.submit-btn {
-  flex: 2;
-  padding: 14px;
-  background: linear-gradient(135deg, #43a047, #2e7d32);
-  color: white;
-  border: none;
-  border-radius: 50px;
-  font-size: 16px;
-  font-weight: 700;
-  cursor: pointer;
-  transition: all 0.2s;
-  box-shadow: 0 4px 16px rgba(46, 125, 50, 0.3);
-}
-
-.submit-btn:hover:not(:disabled) {
-  transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(46, 125, 50, 0.4);
-}
-
-.submit-btn:disabled {
-  background: #a5d6a7;
-  cursor: not-allowed;
-  box-shadow: none;
-}
-`;

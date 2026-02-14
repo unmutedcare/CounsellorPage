@@ -1,8 +1,7 @@
-import { getAuth } from "firebase/auth";
+import { auth, db } from "../firebase/firebase";
 import {
   doc,
   setDoc,
-  getFirestore,
   collection,
   getDoc,
   serverTimestamp,
@@ -12,14 +11,11 @@ export const saveEmotions = async (
   emotions: string[]
 ): Promise<{ sessionId: string | null; error: string | null }> => {
   try {
-    const auth = getAuth();
-    const user = auth.currentUser;
+    const user = auth?.currentUser;
 
     if (!user) {
       return { sessionId: null, error: "User not logged in" };
     }
-
-    const db = getFirestore();
 
     // 🔹 Fetch student details from Users collection
     const userRef = doc(db, "Users", user.uid);

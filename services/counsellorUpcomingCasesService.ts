@@ -1,4 +1,4 @@
-import { db } from "../firebase/firebase";   
+import { db, auth } from "../firebase/firebase";   
 import {
   collection,
   getDocs,
@@ -8,11 +8,9 @@ import {
   doc,
   updateDoc,
 } from "firebase/firestore";
-import { getAuth } from "firebase/auth";
 
 export const fetchUpcomingCases = async () => {
-  const auth = getAuth();
-  const user = auth.currentUser;
+  const user = auth?.currentUser;
 
   if (!user) return [];
 

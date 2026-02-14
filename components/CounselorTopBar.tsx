@@ -1,67 +1,52 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
-import {
-  AppBar,
-  Toolbar,
-  Typography,
-  Box,
-  Button,
-} from "@mui/material";
-import PersonIcon from "@mui/icons-material/Person";
-import LogoutIcon from "@mui/icons-material/Logout";
-import { getAuth, signOut } from "firebase/auth";
+import { 
+  User, 
+  LogOut, 
+  Wind,
+  Sparkles
+} from "lucide-react";
+import { auth } from "../firebase/firebase";
 
 const CounselorTopBar: React.FC = () => {
   const navigate = useNavigate();
 
   const handleLogout = async () => {
     try {
-      const auth = getAuth();
-      await signOut(auth);
-      navigate("/auth");
+      await auth?.signOut();
+      navigate("/role-select");
     } catch (e) {
       console.error("Logout failed:", e);
     }
   };
 
   return (
-    <AppBar position="static" sx={{ backgroundColor: "#2e7d32" }}>
-      <Toolbar>
-        <Typography variant="h6" sx={{ flexGrow: 1, fontWeight: 600 }}>
-          Counselor Dashboard
-        </Typography>
+    <header className="fixed top-6 left-6 right-6 z-50 flex justify-between items-center pointer-events-none">
+      <div className="flex items-center gap-3 pointer-events-auto cursor-pointer" onClick={() => navigate("/counsellor/dashboard")}>
+         <div className="w-10 h-10 accent-gradient rounded-xl flex items-center justify-center shadow-lg shadow-[#ff2d55]/20">
+           <Wind size={20} className="text-white" />
+         </div>
+         <div className="hidden sm:block">
+           <span className="font-luxury tracking-[0.3em] text-[8px] block opacity-40 uppercase">Professional Counselor</span>
+           <span className="text-sm font-bold tracking-tighter text-white">UNMUTED</span>
+         </div>
+      </div>
 
-        <Box sx={{ display: "flex", gap: 1 }}>
-          <Button
-            variant="contained"
-            startIcon={<PersonIcon />}
-            onClick={() => navigate("/counselor/profile")}
-            sx={{
-              backgroundColor: "#fff",
-              color: "#2e7d32",
-              fontWeight: 600,
-              "&:hover": { backgroundColor: "#f0f0f0" },
-            }}
-          >
-            Profile
-          </Button>
-
-          <Button
-            variant="contained"
-            startIcon={<LogoutIcon />}
-            onClick={handleLogout}
-            sx={{
-              backgroundColor: "#ff6b6b",
-              color: "#fff",
-              fontWeight: 600,
-              "&:hover": { backgroundColor: "#ff5252" },
-            }}
-          >
-            Logout
-          </Button>
-        </Box>
-      </Toolbar>
-    </AppBar>
+      <div className="flex gap-3 pointer-events-auto">
+        <button
+          className="p-3 rounded-2xl glass-panel border border-white/10 hover:border-[#ff2d55]/50 transition-all group"
+          onClick={() => navigate("/counsellor/profile")}
+        >
+          <User size={20} className="text-white group-hover:text-[#ff2d55] transition-colors" />
+        </button>
+        <button
+          className="p-3 rounded-2xl glass-panel border border-white/10 hover:border-red-500/50 transition-all group"
+          onClick={handleLogout}
+        >
+          <LogOut size={20} className="text-red-500 group-hover:scale-110 transition-transform" />
+        </button>
+      </div>
+    </header>
   );
 };
 
