@@ -9,7 +9,7 @@ const PageLoader = () => (
   <div className="flex items-center justify-center min-h-[60vh]">
     <div className="flex flex-col items-center gap-6">
       <div className="w-12 h-12 border-2 border-brand-primary border-t-transparent rounded-full animate-spin shadow-[0_0_20px_rgba(16,185,129,0.2)]" />
-      <div className="text-[10px] font-luxury tracking-[0.4em] text-white/20 uppercase animate-pulse">Syncing Sanctuary...</div>
+      <div className="text-[10px] font-luxury tracking-[0.4em] text-white/20 uppercase animate-pulse">Syncing Portal...</div>
     </div>
   </div>
 );

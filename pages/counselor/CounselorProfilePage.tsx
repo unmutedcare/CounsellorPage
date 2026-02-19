@@ -26,6 +26,7 @@ const CounsellorProfilePage: React.FC<CounsellorProfilePageProps> = ({
 
   const [isEditing, setIsEditing] = useState<boolean>(forceEdit);
   const [initials, setInitials] = useState("");
+  const [username, setUsername] = useState(""); // Add username state
   const [meetingLink, setMeetingLink] = useState("");
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -39,6 +40,7 @@ const CounsellorProfilePage: React.FC<CounsellorProfilePageProps> = ({
       if (profile) {
         setInitials(profile.initials ?? "");
         setMeetingLink(profile.meetingLink ?? "");
+        setUsername(profile.username ?? ""); // Load username
       }
       setLoading(false);
     };
@@ -57,6 +59,7 @@ const CounsellorProfilePage: React.FC<CounsellorProfilePageProps> = ({
       const err = await backend.updateProfile({
         initials: initials.trim(),
         meetingLink: meetingLink.trim(),
+        username: username.trim(), // Pass username to backend
       });
 
       setSaving(false);
@@ -85,7 +88,7 @@ const CounsellorProfilePage: React.FC<CounsellorProfilePageProps> = ({
       <div className="absolute top-[20%] left-[-10%] w-[50%] h-[50%] bg-[#5856d6] opacity-[0.03] blur-[150px] rounded-full animate-pulse-glow" />
       
       <div className="relative z-10 max-w-4xl mx-auto w-full flex flex-col justify-center reveal pt-12">
-        {/* Profile Sanctuary Card */}
+        {/* Profile Card */}
         <div className="glass-panel p-12 border-white/5 shadow-2xl relative overflow-hidden">
           {loading ? (
             <div className="flex justify-center py-20">
@@ -97,7 +100,7 @@ const CounsellorProfilePage: React.FC<CounsellorProfilePageProps> = ({
                 <div>
                   <div className="inline-flex items-center gap-2 px-3 py-1 bg-[#5856d6]/10 rounded-full mb-4">
                     <Sparkles size={12} className="text-[#5856d6]" />
-                    <span className="text-[9px] font-luxury tracking-widest text-[#5856d6] uppercase">Curation Portal</span>
+                    <span className="text-[9px] font-luxury tracking-widest text-[#5856d6] uppercase">Management Portal</span>
                   </div>
                   <h3 className="text-4xl font-bold tracking-tighter">Account Details</h3>
                 </div>
@@ -124,9 +127,26 @@ const CounsellorProfilePage: React.FC<CounsellorProfilePageProps> = ({
               {success && (
                 <div className="bg-[#4caf50]/10 border border-[#4caf50]/20 p-4 rounded-2xl flex items-center gap-3 animate-in fade-in slide-in-from-top-4">
                   <CheckCircle2 size={18} className="text-[#4caf50]" />
-                  <p className="text-sm font-light text-[#4caf50]">Identity update successful. Your sanctuary is updated.</p>
+                  <p className="text-sm font-light text-[#4caf50]">Identity update successful. Your profile is updated.</p>
                 </div>
               )}
+
+              <div className="grid grid-cols-1 gap-12">
+                {/* Username/Name */}
+                <div className="space-y-4">
+                  <label className="text-[10px] font-luxury tracking-[0.3em] text-white/30 uppercase ml-1 block">Account Name</label>
+                  <div className="relative group">
+                    <User className="absolute left-6 top-1/2 -translate-y-1/2 text-white/20 group-focus-within:text-[#5856d6] transition-colors" size={18} />
+                    <input
+                      value={username}
+                      onChange={(e) => setUsername(e.target.value)}
+                      disabled={!isEditing}
+                      placeholder="Your display name"
+                      className="w-full bg-white/[0.03] border border-white/10 rounded-3xl py-6 pl-16 pr-6 text-xl font-light outline-none focus:border-[#5856d6]/50 focus:bg-white/[0.05] transition-all disabled:opacity-40 disabled:cursor-not-allowed"
+                    />
+                  </div>
+                </div>
+              </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
                 {/* Initials */}
@@ -148,7 +168,7 @@ const CounsellorProfilePage: React.FC<CounsellorProfilePageProps> = ({
 
                 {/* Meeting Link */}
                 <div className="space-y-4">
-                  <label className="text-[10px] font-luxury tracking-[0.3em] text-white/30 uppercase ml-1 block">Sacred Space (Meeting Link)</label>
+                  <label className="text-[10px] font-luxury tracking-[0.3em] text-white/30 uppercase ml-1 block">Session Meeting Link</label>
                   <div className="relative group">
                     <ExternalLink className="absolute left-6 top-1/2 -translate-y-1/2 text-white/20 group-focus-within:text-[#5856d6] transition-colors" size={18} />
                     <input
@@ -165,7 +185,7 @@ const CounsellorProfilePage: React.FC<CounsellorProfilePageProps> = ({
               <div className="pt-8 border-t border-white/5 flex items-center gap-4 opacity-20">
                  <Wind size={16} />
                  <p className="text-[9px] font-luxury tracking-[0.2em] uppercase leading-relaxed">
-                   These identifiers are used to establish trust and presence within the sanctuary. Ensure your meeting space is prepared for deep listening.
+                   These identifiers are used to establish trust and presence within the platform. Ensure your meeting space is prepared for professional support.
                  </p>
               </div>
             </div>

@@ -17,14 +17,15 @@ export class CounsellorProfileBackend {
   async updateProfile(params: {
     initials: string;
     meetingLink: string;
+    username?: string; // Add optional username
   }): Promise<string | null> {
     try {
       const user = this.auth.currentUser;
       if (!user) return "User not logged in.";
 
-      const { initials, meetingLink } = params;
+      const { initials, meetingLink, username } = params;
 
-      if (initials.trim().length ===0) {
+      if (initials.trim().length === 0) {
         return "Initials cannot be empty.";
       }
 
@@ -32,17 +33,31 @@ export class CounsellorProfileBackend {
         return "Please enter a valid meeting link.";
       }
 
-      const ref = doc(this.firestore, "Counsellors", user.uid);
+      const counsellorRef = doc(this.firestore, "Counsellors", user.uid);
+      const userRef = doc(this.firestore, "Users", user.uid);
 
-      await updateDoc(ref, {
+      // Update Counsellors collection
+      await updateDoc(counsellorRef, {
         initials: initials.trim(),
         meetingLink: meetingLink.trim(),
         updatedAt: Timestamp.now(),
       });
 
+      // Update Users collection for the name (if provided)
+      if (username && username.trim().length > 0) {
+        await updateDoc(userRef, {
+          username: username.trim(),
+          updatedAt: Timestamp.now(),
+        });
+      }
+
       return null;
     } catch (e: any) {
-      return `Failed to update profile: ${e}`;
+      // If document doesn't exist, provide a more helpful error or handle it
+      if (e.code === 'not-found') {
+        return "Profile document not found. Please try logging out and in again.";
+      }
+      return `Failed to update profile: ${e.message || e}`;
     }
   }
 

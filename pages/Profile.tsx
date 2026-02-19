@@ -105,7 +105,7 @@ const Profile: React.FC = () => {
                <Sparkles size={12} className="text-brand-primary" />
                <span className="text-[10px] font-luxury tracking-widest text-white/60 uppercase">{role} Identity</span>
             </div>
-            <h2 className="text-5xl font-bold tracking-tighter">My <span className="text-gradient italic">Sanctuary</span></h2>
+            <h2 className="text-5xl font-bold tracking-tighter">My <span className="text-gradient italic">Profile</span></h2>
             <p className="text-white/30 font-light tracking-wide italic">Your history of support and transformation.</p>
           </div>
         </div>
@@ -220,7 +220,10 @@ const Profile: React.FC = () => {
                       </div>
                     </div>
 
-                    <button className="p-4 rounded-2xl glass-panel border-white/5 hover:border-brand-primary/30 transition-all text-white/20 hover:text-brand-primary">
+                    <button 
+                      onClick={() => activeTab === 'upcoming' && navigate(`/student/countdown?sessionId=${session.id}`)}
+                      className="p-4 rounded-2xl glass-panel border-white/5 hover:border-brand-primary/30 transition-all text-white/20 hover:text-brand-primary"
+                    >
                        <ChevronRight size={24} />
                     </button>
                   </div>

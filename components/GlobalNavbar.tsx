@@ -64,7 +64,7 @@ const GlobalNavbar: React.FC = () => {
           </div>
           <div className="flex flex-col">
             <span className="text-sm font-bold tracking-tighter text-white group-hover:text-brand-primary transition-colors">UNMUTED</span>
-            <span className="text-[8px] font-luxury tracking-[0.3em] text-white/40 uppercase leading-none">Sanctuary</span>
+            <span className="text-[8px] font-luxury tracking-[0.3em] text-white/40 uppercase leading-none">Support</span>
           </div>
         </div>
       </div>

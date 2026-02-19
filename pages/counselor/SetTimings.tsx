@@ -179,13 +179,13 @@ const SetTiming: React.FC = () => {
         <div className="text-center mb-16">
           <div className="inline-flex items-center gap-2 px-3 py-1 glass-panel border border-white/10 rounded-full mb-6">
             <Sparkles size={14} className="text-[#4caf50]" />
-            <span className="text-[10px] font-luxury uppercase tracking-[0.2em] text-white/60">Availability Curation</span>
+            <span className="text-[10px] font-luxury uppercase tracking-[0.2em] text-white/60">Availability Management</span>
           </div>
           <h2 className="text-6xl font-bold tracking-tighter mb-4">
-            Sacred <span className="text-gradient italic">Windows</span>
+            Availability <span className="text-gradient italic">Windows</span>
           </h2>
           <p className="text-white/40 text-xl font-light tracking-wide max-w-2xl mx-auto">
-            Design your presence in the sanctuary. When are you ready to listen deeply?
+            Design your presence in the portal. When are you ready to provide support?
           </p>
         </div>
 
@@ -272,7 +272,7 @@ const SetTiming: React.FC = () => {
       </div>
 
       <div className="absolute bottom-12 text-white/5 font-luxury text-[10px] tracking-[1.5em] uppercase left-1/2 -translate-x-1/2 pointer-events-none whitespace-nowrap">
-        S C H E D U L E • C U R A T I O N
+        S C H E D U L E • M A N A G E M E N T
       </div>
     </div>
   );

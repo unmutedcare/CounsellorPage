@@ -39,7 +39,7 @@ const Landing: React.FC = () => {
 
         {/* Subtitle */}
         <p className="text-xl md:text-2xl text-white/40 mb-16 max-w-2xl font-light leading-relaxed tracking-wide">
-          A secure, confidential space for meaningful connection. Connect with expert guidance in a sanctuary designed for your mental well-being.
+          A secure, confidential space for meaningful connection. Connect with expert guidance in a support platform designed for your mental well-being.
         </p>
 
         {/* Primary CTA */}
@@ -77,7 +77,7 @@ const Landing: React.FC = () => {
       </div>
 
       <div className="fixed top-1/2 right-[-6rem] -translate-y-1/2 rotate-90 opacity-5 pointer-events-none select-none">
-        <span className="text-[14rem] font-serif text-white whitespace-nowrap tracking-widest uppercase">Sanctuary</span>
+        <span className="text-[14rem] font-serif text-white whitespace-nowrap tracking-widest uppercase">Support</span>
       </div>
     </div>
   );

@@ -70,6 +70,18 @@ exports.createRazorpayOrder = onCall(
 
       const session = snap.data();
       const now = admin.firestore.Timestamp.now();
+
+      // 1️⃣ Check if slot is still available
+      const slotDocId = session.selectedSlot?.slotDocId;
+      if (!slotDocId) {
+        throw new HttpsError("failed-precondition", "SLOT_NOT_SELECTED");
+      }
+
+      const slotSnap = await admin.firestore().collection("GlobalSessions").doc(slotDocId).get();
+      if (!slotSnap.exists || slotSnap.data().isBooked) {
+        throw new HttpsError("failed-precondition", "SLOT_ALREADY_BOOKED");
+      }
+
       console.log("NOW:", now.toDate());
       if (session.sessionTimestamp) {
         console.log("SESSION:", session.sessionTimestamp.toDate());
@@ -232,6 +244,32 @@ exports.verifyPayment = onCall(
 
       reminderScheduled: false, // 👈 NEW
     });
+
+    // ✅ Mark GlobalSession as booked
+    const slotDocId = session.selectedSlot?.slotDocId;
+    if (slotDocId) {
+      await admin.firestore().collection("GlobalSessions").doc(slotDocId).update({
+        isBooked: true,
+        bookedBy: sessionId,
+      });
+    }
+
+    // ✅ Add to user's personal Bookings collection
+    await admin.firestore()
+      .collection("Bookings")
+      .doc(auth.uid)
+      .collection("sessions")
+      .doc(sessionId)
+      .set({
+        sessionId: sessionId,
+        counsellorUID: session.selectedSlot?.counsellorId || "",
+        counsellorName: session.selectedSlot?.counsellorUsername || "Anonymous",
+        date: session.selectedSlot?.date || "",
+        time: session.selectedSlot?.time || "",
+        status: "upcoming",
+        createdAt: admin.firestore.FieldValue.serverTimestamp(),
+      });
+
     // 🔔 Notify counsellor AFTER payment success
     await sendCounsellorNotification(
       session.counsellorId,

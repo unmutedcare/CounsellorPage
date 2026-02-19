@@ -105,18 +105,11 @@ class CalendarBackend {
         throw new Error("Meeting link not set by counsellor");
       }
 
-      // 3️⃣ Mark GlobalSession as booked
-      transaction.update(slotRef, {
-        isBooked: true,
-        bookedBy: sessionId,
-      });
-
-      // 4️⃣ Build canonical session timestamp
+      // 3️⃣ Mark VideoCallSession with selected slot details (but don't mark GlobalSession as booked yet)
       const sessionTimestamp = this.buildSessionTimestamp(dateStr, time);
 
-      // 5️⃣ Update VideoCallSession (denormalised snapshot)
       transaction.update(sessionRef, {
-        status: "scheduled",
+        status: "slot_selected", // Changed from "scheduled" to "slot_selected"
         selectedSlot: {
           date: dateStr,
           time,

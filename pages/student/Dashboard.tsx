@@ -1,6 +1,7 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { User, MessageSquare, Sparkles, Compass, Zap, Book, Wind, ChevronRight, ChevronLeft } from "lucide-react";
+import { User, MessageSquare, Sparkles, Compass, Zap, Book, Wind, ChevronRight, ChevronLeft, Clock, Calendar } from "lucide-react";
+import { fetchMyBookings } from "../../services/studentBookingService";
 
 const quotes = [
   `"The oak fought the wind and was broken, the willow bent when it must and survived." – Robert Jordan`,
@@ -17,6 +18,15 @@ const getQuoteOfTheDay = () => {
 const StudentDashboard: React.FC = () => {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
+  const [upcomingSessions, setUpcomingSessions] = useState<any[]>([]);
+
+  useEffect(() => {
+    const loadSessions = async () => {
+      const bookings = await fetchMyBookings();
+      setUpcomingSessions(bookings.filter(b => b.status === 'upcoming'));
+    };
+    loadSessions();
+  }, []);
 
   const handleTalkToSomeone = async () => {
     setLoading(true);
@@ -68,6 +78,49 @@ const StudentDashboard: React.FC = () => {
             </div>
           </div>
         </div>
+
+        {/* UPCOMING SESSIONS */}
+        {upcomingSessions.length > 0 && (
+          <div className="space-y-6 reveal">
+            <div className="flex items-center gap-3">
+               <Clock size={20} className="text-brand-primary" />
+               <h2 className="text-xl font-luxury tracking-[0.2em] text-white/60 uppercase">Scheduled Sessions</h2>
+            </div>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {upcomingSessions.map(session => (
+                <div 
+                  key={session.id}
+                  onClick={() => navigate(`/student/countdown?sessionId=${session.id}`)}
+                  className="glass-panel p-8 border border-white/5 hover:border-brand-primary/30 transition-all duration-500 group cursor-pointer relative overflow-hidden"
+                >
+                  <div className="flex justify-between items-center relative z-10">
+                    <div className="space-y-4">
+                      <div className="inline-flex items-center gap-2 px-2 py-0.5 bg-brand-primary/10 rounded-full border border-brand-primary/20">
+                         <div className="w-1.5 h-1.5 rounded-full bg-brand-primary animate-pulse" />
+                         <span className="text-[8px] font-luxury tracking-widest text-brand-primary uppercase">Confirmed</span>
+                      </div>
+                      <div>
+                        <h3 className="text-2xl font-bold tracking-tight text-white/90">Session with {session.counsellorName}</h3>
+                        <div className="flex items-center gap-4 mt-2">
+                           <div className="flex items-center gap-1.5 text-[10px] font-luxury tracking-widest text-white/30 uppercase">
+                             <Calendar size={12} className="text-brand-primary/50" /> {session.date}
+                           </div>
+                           <div className="flex items-center gap-1.5 text-[10px] font-luxury tracking-widest text-white/30 uppercase">
+                             <Clock size={12} className="text-brand-primary/50" /> {session.time}
+                           </div>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="p-3 rounded-xl bg-white/5 group-hover:bg-brand-primary/20 transition-colors">
+                       <ChevronRight size={20} className="text-white/20 group-hover:text-brand-primary" />
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
 
         {/* EXPLORE SECTION */}
         <div className="space-y-6">

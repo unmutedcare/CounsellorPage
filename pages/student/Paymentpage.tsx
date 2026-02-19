@@ -36,7 +36,7 @@ export default function PaymentPage() {
                 key: import.meta.env.VITE_RAZORPAY_KEY_ID,
                 amount,
                 currency: "INR",
-                name: "Unmuted Support",
+                name: "Unmuted",
                 description: "Private Counseling Session",
                 order_id: orderId,
 

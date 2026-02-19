@@ -32,6 +32,7 @@ const CounsellorLogin: React.FC = () => {
             await setDoc(doc(db, "Users", user.uid), {
                 uid: user.uid,
                 email: email.trim(),
+                username: email.split('@')[0], // Default username
                 role: "counsellor",
                 createdAt: serverTimestamp(),
             });
@@ -39,6 +40,7 @@ const CounsellorLogin: React.FC = () => {
             await setDoc(doc(db, "Counsellors", user.uid), {
                 uid: user.uid,
                 email: email.trim(),
+                username: email.split('@')[0], // Keep consistent
                 createdAt: serverTimestamp(),
             });
 
@@ -92,7 +94,7 @@ const CounsellorLogin: React.FC = () => {
                     <h1 className="text-5xl font-bold text-white tracking-tighter mb-3">
                         {isSignup ? "Create" : "Counselor"} <span className="text-gradient italic">Login</span>
                     </h1>
-                    <p className="text-white/40 font-light tracking-wide">Enter the sanctuary to provide guidance.</p>
+                    <p className="text-white/40 font-light tracking-wide">Access the portal to provide guidance.</p>
                 </div>
 
                 <div className="glass-panel p-10 border border-white/5 shadow-2xl relative overflow-hidden">

@@ -159,7 +159,7 @@ const CountdownPage = ({ sessionId: propSessionId }: { sessionId?: string }) => 
             </div>
 
             <div className="absolute bottom-12 left-1/2 -translate-x-1/2 text-white/5 font-luxury text-[10px] tracking-[1.5em] uppercase pointer-events-none whitespace-nowrap">
-                U N M U T E D • S U P P O R T
+                U N M U T E D
             </div>
         </div>
     );

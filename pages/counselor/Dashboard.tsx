@@ -50,7 +50,7 @@ const CounselorDashboard: React.FC = () => {
           <ActionCard 
             icon={<Calendar size={24} />}
             title="Set Availability"
-            desc="Curate your schedule. Add up to 3 sacred sessions per day."
+            desc="Design your availability. Add up to 3 counseling sessions per day."
             color="#4caf50"
             onClick={() => navigate("/counsellor/set-timing")}
           />
@@ -86,7 +86,7 @@ const CounselorDashboard: React.FC = () => {
             </div>
           ) : sessions.length === 0 ? (
             <div className="glass-panel p-20 text-center border-dashed border-white/5 opacity-40">
-               <p className="font-luxury tracking-widest text-sm uppercase">No active sessions in your sanctuary.</p>
+               <p className="font-luxury tracking-widest text-sm uppercase">No active sessions in your schedule.</p>
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">

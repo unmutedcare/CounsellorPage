@@ -23,7 +23,7 @@ const VerifyEmail: React.FC = () => {
                 <h1 className="text-5xl font-bold tracking-tighter mb-6">Check your <span className="text-gradient italic">inbox</span></h1>
                 
                 <p className="text-white/50 text-xl font-light leading-relaxed mb-12">
-                    A verification link has been sent to your email address. Please click the link to activate your sanctuary access.
+                    A verification link has been sent to your email address. Please click the link to activate your account.
                 </p>
 
                 <div className="glass-panel p-8 border border-white/5 mb-10">
