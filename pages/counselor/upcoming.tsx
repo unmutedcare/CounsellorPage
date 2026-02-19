@@ -61,8 +61,7 @@ const UpcomingCases: React.FC = () => {
            </div>
            <h2 className="text-5xl font-bold tracking-tighter mb-4">Upcoming <span className="text-gradient italic">Sessions</span></h2>
            <p className="text-white/40 text-lg font-light tracking-wide max-w-xl mx-auto">
-             These students have scheduled sessions with you. Prepare your space for professional support.
-           </p>
+                           These students have scheduled sessions with you. Prepare your space for guidance and support.           </p>
         </div>
 
         {/* Content */}

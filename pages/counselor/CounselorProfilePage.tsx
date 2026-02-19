@@ -185,7 +185,7 @@ const CounsellorProfilePage: React.FC<CounsellorProfilePageProps> = ({
               <div className="pt-8 border-t border-white/5 flex items-center gap-4 opacity-20">
                  <Wind size={16} />
                  <p className="text-[9px] font-luxury tracking-[0.2em] uppercase leading-relaxed">
-                   These identifiers are used to establish trust and presence within the platform. Ensure your meeting space is prepared for professional support.
+                   These identifiers are used to establish trust and presence within the platform. Ensure your meeting space is prepared for meaningful support.
                  </p>
               </div>
             </div>

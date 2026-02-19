@@ -87,7 +87,7 @@ const ContactFAB: React.FC = () => {
 
             {/* Footer */}
             <div className="p-4 border-t border-white/5 bg-white/[0.02] text-center">
-              <p className="text-[10px] text-white/20 font-luxury tracking-[0.2em] uppercase">Unmuted • Est. 2026</p>
+              <p className="text-[10px] text-white/20 font-luxury tracking-[0.2em] uppercase">Unmuted</p>
             </div>
 
           </div>

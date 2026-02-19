@@ -96,7 +96,7 @@ export default function PaymentPage() {
                         <span className="text-[10px] font-luxury uppercase tracking-[0.2em] text-white/60">Session Confirmation</span>
                     </div>
                     <h1 className="text-5xl font-bold tracking-tighter mb-4">Complete your <span className="text-gradient italic">booking</span></h1>
-                    <p className="text-white/40 text-lg font-light tracking-wide">Secure your appointment with professional support.</p>
+                    <p className="text-white/40 text-lg font-light tracking-wide">Secure your appointment with someone who understands you.</p>
                 </div>
 
                 {/* Pricing Card */}
@@ -111,11 +111,11 @@ export default function PaymentPage() {
                             <span className="text-3xl font-light opacity-40 italic">₹</span>
                             <span className="text-7xl font-bold tracking-tighter">49</span>
                         </div>
-                        <p className="text-white/30 text-sm mt-4 font-light italic tracking-wider">Professional counseling per 30-min session</p>
+                        <p className="text-white/30 text-sm mt-4 font-light italic tracking-wider">Peer counseling per 30-min session</p>
                     </div>
 
                     <div className="space-y-6 mb-10">
-                        <Feature icon={<ShieldCheck size={18} className="text-brand-primary" />} text="Certified Peer Counselor" />
+                        <Feature icon={<ShieldCheck size={18} className="text-brand-primary" />} text="Peer Counsellor who understands" />
                         <Feature icon={<Wind size={18} className="text-brand-secondary" />} text="Private & Secure Connection" />
                         <Feature icon={<Zap size={18} className="text-brand-primary" />} text="Instant Portal Access" />
                     </div>

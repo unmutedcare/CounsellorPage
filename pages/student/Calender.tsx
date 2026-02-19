@@ -157,7 +157,7 @@ const CalendarPage: React.FC<CalendarPageProps> = ({ sessionId }) => {
         <div className="text-center mb-12 mt-8">
           <div className="inline-flex items-center gap-2 px-3 py-1 glass-panel border border-white/10 rounded-full mb-6">
             <CalendarIcon size={14} className="text-brand-secondary" />
-            <span className="text-[10px] font-luxury uppercase tracking-[0.2em] text-white/60">Professional Scheduling</span>
+            <span className="text-[10px] font-luxury uppercase tracking-[0.2em] text-white/60">Secure Scheduling</span>
           </div>
           <h2 className="text-5xl md:text-7xl font-bold tracking-tighter mb-4">
             Select your <span className="text-gradient italic">slot</span>

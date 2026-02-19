@@ -20,6 +20,11 @@ const GlobalNavbar: React.FC = () => {
     location.pathname === "/student/dashboard" || 
     location.pathname === "/counsellor/dashboard";
 
+  const hideNavbar =
+    location.pathname === "/" ||
+    location.pathname === "/role-select";
+
+  if (hideNavbar) return null;
   if (isAuthPage && !isAuthenticated) return null;
 
   const handleLogoClick = () => {
@@ -59,12 +64,11 @@ const GlobalNavbar: React.FC = () => {
           onClick={handleLogoClick}
           className="flex items-center gap-3 cursor-pointer group"
         >
-          <div className="w-10 h-10 rounded-xl overflow-hidden border border-white/10 group-hover:border-brand-primary/50 transition-all shadow-lg">
-            <img src="/logo.jpeg" alt="Unmuted Logo" className="w-full h-full object-cover" />
+          <div className="w-10 h-10 rounded-xl overflow-hidden border border-white/20 group-hover:border-brand-primary/50 transition-all shadow-lg">
+            <img src="/unmutedlogo.webp" alt="Unmuted Logo" className="w-full h-full object-cover" />
           </div>
           <div className="flex flex-col">
             <span className="text-sm font-bold tracking-tighter text-white group-hover:text-brand-primary transition-colors">UNMUTED</span>
-            <span className="text-[8px] font-luxury tracking-[0.3em] text-white/40 uppercase leading-none">Support</span>
           </div>
         </div>
       </div>

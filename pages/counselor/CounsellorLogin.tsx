@@ -86,6 +86,13 @@ const CounsellorLogin: React.FC = () => {
             <div className="absolute top-[-15%] left-[-5%] w-[50%] h-[50%] bg-brand-secondary opacity-10 blur-[150px] rounded-full" />
             
             <div className="relative z-10 w-full max-w-[480px] reveal">
+                {/* Logo */}
+                <div className="flex justify-center mb-8">
+                   <div className="w-20 h-20 rounded-2xl overflow-hidden border border-white/10 shadow-xl">
+                     <img src="/unmutedlogo.webp" alt="Unmuted Logo" className="w-full h-full object-cover" />
+                   </div>
+                </div>
+
                 <div className="text-center mb-10">
                     <div className="inline-flex items-center gap-2 px-3 py-1 glass-panel border border-white/10 rounded-full mb-6">
                         <Sparkles size={14} className="text-brand-secondary" />
