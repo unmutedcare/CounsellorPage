@@ -7,6 +7,7 @@ import {
   Sparkles
 } from "lucide-react";
 import { auth } from "../firebase/firebase";
+import logo from "@/src/assets/unmutedlogo.webp";
 
 const CounselorTopBar: React.FC = () => {
   const navigate = useNavigate();
@@ -24,7 +25,7 @@ const CounselorTopBar: React.FC = () => {
     <header className="fixed top-6 left-6 right-6 z-50 flex justify-between items-center pointer-events-none">
       <div className="flex items-center gap-3 pointer-events-auto cursor-pointer" onClick={() => navigate("/counsellor/dashboard")}>
          <div className="w-10 h-10 rounded-xl overflow-hidden border border-white/20 shadow-lg">
-           <img src="/unmutedlogo.webp" alt="Unmuted Logo" className="w-full h-full object-cover" />
+           <img src={logo} alt="Unmuted Logo" className="w-full h-full object-cover" />
          </div>
          <div className="hidden sm:block">
                        <span className="font-luxury tracking-[0.3em] text-[8px] block opacity-40 uppercase">Peer Counsellor</span>           <span className="text-sm font-bold tracking-tighter text-white">UNMUTED</span>

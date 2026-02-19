@@ -11,6 +11,7 @@ import {
 } from "../../services/Student_Login_BackEnd";
 import { useApp } from "../../context/AppContext";
 import { Mail, Lock, Eye, EyeOff, Chrome, Sparkles } from "lucide-react";
+import logo from "@/src/assets/unmutedlogo.webp";
 
 
 const StudentLogin: React.FC = () => {
@@ -118,7 +119,7 @@ const StudentLogin: React.FC = () => {
         {/* Logo */}
         <div className="flex justify-center mb-8">
            <div className="w-20 h-20 rounded-2xl overflow-hidden border border-white/20 shadow-xl">
-             <img src="/unmutedlogo.webp" alt="Unmuted Logo" className="w-full h-full object-cover" />
+             <img src={logo} alt="Unmuted Logo" className="w-full h-full object-cover" />
            </div>
         </div>
 

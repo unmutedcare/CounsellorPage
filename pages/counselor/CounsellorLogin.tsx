@@ -13,6 +13,7 @@ import {
 import { auth, db } from "../../firebase/firebase";
 import { useApp } from "../../context/AppContext";
 import { Mail, Lock, Sparkles, LogIn, UserPlus } from "lucide-react";
+import logo from "@/src/assets/unmutedlogo.webp";
 
 const CounsellorLogin: React.FC = () => {
     const [isSignup, setIsSignup] = useState(false);
@@ -89,7 +90,7 @@ const CounsellorLogin: React.FC = () => {
                 {/* Logo */}
                 <div className="flex justify-center mb-8">
                    <div className="w-20 h-20 rounded-2xl overflow-hidden border border-white/10 shadow-xl">
-                     <img src="/unmutedlogo.webp" alt="Unmuted Logo" className="w-full h-full object-cover" />
+                     <img src={logo} alt="Unmuted Logo" className="w-full h-full object-cover" />
                    </div>
                 </div>
 
