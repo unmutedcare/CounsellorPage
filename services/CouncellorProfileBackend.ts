@@ -2,6 +2,7 @@ import {
   doc,
   getDoc,
   updateDoc,
+  setDoc,
   Timestamp,
 } from "firebase/firestore";
 import { auth, db as firestore } from "../firebase/firebase";
@@ -36,19 +37,19 @@ export class CounsellorProfileBackend {
       const counsellorRef = doc(this.firestore, "Counsellors", user.uid);
       const userRef = doc(this.firestore, "Users", user.uid);
 
-      // Update Counsellors collection
-      await updateDoc(counsellorRef, {
+      // Use setDoc with merge: true to avoid "No document to update" errors
+      await setDoc(counsellorRef, {
         initials: initials.trim(),
         meetingLink: meetingLink.trim(),
         updatedAt: Timestamp.now(),
-      });
+      }, { merge: true });
 
       // Update Users collection for the name (if provided)
       if (username && username.trim().length > 0) {
-        await updateDoc(userRef, {
+        await setDoc(userRef, {
           username: username.trim(),
           updatedAt: Timestamp.now(),
-        });
+        }, { merge: true });
       }
 
       return null;

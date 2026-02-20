@@ -173,49 +173,66 @@ const Profile: React.FC = () => {
                       <input 
                         value={username}
                         onChange={(e) => setUsername(e.target.value)}
-                        disabled={!isEditing}
+                        readOnly={!isEditing}
+                        onClick={() => !isEditing && setIsEditing(true)}
                         placeholder="Your display name"
-                        className="w-full bg-white/[0.03] border border-white/10 rounded-2xl p-4 text-white focus:border-brand-primary/50 outline-none transition-all disabled:opacity-50"
+                        className={`w-full bg-white/[0.03] border border-white/10 rounded-2xl p-4 text-white focus:border-brand-primary/50 outline-none transition-all ${isEditing ? 'cursor-text' : 'cursor-pointer opacity-70'}`}
                       />
                     </div>
                     <div className="space-y-3">
                       <label className="text-[10px] font-luxury tracking-[0.3em] text-white/30 uppercase ml-1 block">Registered Email</label>
-                      <div className="w-full bg-white/[0.01] border border-white/5 rounded-2xl p-4 text-white/40 flex items-center gap-3">
+                      <div className="w-full bg-white/[0.01] border border-white/5 rounded-2xl p-4 text-white/40 flex items-center gap-3 cursor-not-allowed">
                         <Mail size={16} />
                         <span className="truncate">{profile?.email}</span>
                       </div>
                     </div>
 
-                    {role === 'COUNSELOR' && (
+                    {role === 'COUNSELOR' ? (
                       <>
                         <div className="space-y-3">
-                          <label className="text-[10px] font-luxury tracking-[0.3em] text-white/30 uppercase ml-1 block">Counsellor Initials</label>
+                          <label className="text-[10px] font-luxury tracking-[0.2em] text-white/30 uppercase ml-1 block font-bold italic">Counsellor Initials</label>
                           <input 
                             value={initials}
                             onChange={(e) => setInitials(e.target.value.toUpperCase())}
-                            disabled={!isEditing}
+                            readOnly={!isEditing}
+                            onClick={() => !isEditing && setIsEditing(true)}
                             placeholder="e.g. JD"
                             maxLength={3}
-                            className="w-full bg-white/[0.03] border border-white/10 rounded-2xl p-4 text-white focus:border-brand-primary/50 outline-none transition-all disabled:opacity-50"
+                            className={`w-full bg-white/[0.03] border rounded-2xl p-4 text-white focus:border-brand-primary/50 outline-none transition-all
+                              ${isEditing ? 'border-brand-primary/50 cursor-text' : 'border-white/5 opacity-60 cursor-pointer'}
+                            `}
                           />
                         </div>
                         <div className="space-y-3 md:col-span-2">
                           <label className="text-[12px] font-luxury tracking-[0.3em] text-red-500 uppercase ml-1 block font-bold">Google Meet Link (Required for Sessions)</label>
-                          <input 
-                            value={meetingLink}
-                            onChange={(e) => setMeetingLink(e.target.value)}
-                            disabled={!isEditing}
-                            placeholder="https://meet.google.com/xxx-xxxx-xxx"
-                            className={`w-full bg-white/[0.05] border-2 rounded-2xl p-5 text-white outline-none transition-all text-lg
-                              ${isEditing ? 'border-red-500 shadow-[0_0_20px_rgba(239,68,68,0.2)]' : 'border-red-900/30 opacity-80'}
-                            `}
-                          />
+                          <div className="relative group">
+                            <input 
+                              value={meetingLink}
+                              onChange={(e) => setMeetingLink(e.target.value)}
+                              readOnly={!isEditing}
+                              onClick={() => !isEditing && setIsEditing(true)}
+                              placeholder="https://meet.google.com/xxx-xxxx-xxx"
+                              className={`w-full bg-white/[0.05] border-2 rounded-2xl p-5 text-white outline-none transition-all text-lg
+                                ${isEditing ? 'border-red-500 shadow-[0_0_25px_rgba(239,68,68,0.3)] cursor-text bg-white/[0.08]' : 'border-red-900/40 opacity-90 cursor-pointer'}
+                              `}
+                            />
+                            {!isEditing && !meetingLink && (
+                              <div className="absolute inset-0 flex items-center pl-5 pointer-events-none">
+                                <span className="text-red-500/40 text-sm font-luxury uppercase tracking-widest animate-pulse">Link Missing - Click to add</span>
+                              </div>
+                            )}
+                          </div>
                           {isEditing && (
-                            <p className="text-[10px] text-red-400/60 uppercase tracking-widest ml-1">This link will be shared with students when they book your sessions.</p>
+                            <p className="text-[10px] text-red-400/60 uppercase tracking-widest ml-1 font-bold">Students will end up in this Google Meet room at the scheduled time.</p>
                           )}
                         </div>
                       </>
-                    )}
+                    ) : !role && isAuthenticated ? (
+                      <div className="md:col-span-2 py-4 flex items-center gap-3 text-white/20">
+                        <div className="w-4 h-4 border border-white/20 border-t-white rounded-full animate-spin" />
+                        <span className="text-[10px] font-luxury uppercase tracking-widest">Identifying role attributes...</span>
+                      </div>
+                    ) : null}
                   </div>
 
                   <div className="pt-8 border-t border-white/5 flex items-center gap-4 opacity-20">

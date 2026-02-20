@@ -1,5 +1,5 @@
 import { auth, db } from "../firebase/firebase";
-import { doc, getDoc, updateDoc, collection, query, where, getDocs } from "firebase/firestore";
+import { doc, getDoc, updateDoc, collection, query, where, getDocs, setDoc } from "firebase/firestore";
 
 export const getUserProfile = async () => {
   const user = auth?.currentUser;
@@ -8,7 +8,8 @@ export const getUserProfile = async () => {
   const userDoc = await getDoc(doc(db, "Users", user.uid));
   if (userDoc.exists()) {
     const userData = userDoc.data();
-    if (userData.role === 'counsellor' || userData.role === 'COUNSELOR') {
+    const rawRole = (userData.role || "").toUpperCase();
+    if (rawRole === 'COUNSELLOR' || rawRole === 'COUNSELOR') {
       const counsellorDoc = await getDoc(doc(db, "Counsellors", user.uid));
       if (counsellorDoc.exists()) {
         return { ...userData, ...counsellorDoc.data() };
@@ -45,15 +46,13 @@ export const updateUserProfile = async (data: {
     updatedAt: new Date()
   };
 
-  await updateDoc(userRef, updateObj);
+  // Use setDoc with merge: true to avoid "No document to update" errors
+  await setDoc(userRef, updateObj, { merge: true });
 
   // If it's a counsellor, also update the Counsellors collection
   const userSnap = await getDoc(userRef);
   const role = userSnap.data()?.role;
   if (role === 'counsellor' || role === 'COUNSELOR') {
-    const counsellorSnap = await getDoc(counsellorRef);
-    if (counsellorSnap.exists()) {
-      await updateDoc(counsellorRef, updateObj);
-    }
+    await setDoc(counsellorRef, updateObj, { merge: true });
   }
 };
