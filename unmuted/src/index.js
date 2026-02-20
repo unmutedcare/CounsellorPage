@@ -236,53 +236,72 @@ exports.verifyPayment = onCall(
       throw new HttpsError("permission-denied", "Invalid signature");
     }
 
-    // ✅ Mark payment successful
-    await sessionRef.update({
-      status: "paid",
-      razorpayPaymentId: razorpay_payment_id,
-      paymentVerifiedAt: admin.firestore.FieldValue.serverTimestamp(),
+    // --- START TRANSACTION ---
+    await admin.firestore().runTransaction(async (transaction) => {
+      const freshSnap = await transaction.get(sessionRef);
+      if (!freshSnap.exists) throw new HttpsError("not-found", "Session not found");
+      const freshSession = freshSnap.data();
 
-      reminderScheduled: false, // 👈 NEW
-    });
+      if (freshSession.status === "paid") return; // Already processed
 
-    // ✅ Mark GlobalSession as booked
-    const slotDocId = session.selectedSlot?.slotDocId;
-    if (slotDocId) {
-      await admin.firestore().collection("GlobalSessions").doc(slotDocId).update({
-        isBooked: true,
-        bookedBy: sessionId,
+      // 1. Check & Mark GlobalSession Slot
+      const slotId = freshSession.selectedSlot?.slotDocId;
+      if (slotId) {
+        const slotRef = admin.firestore().collection("GlobalSessions").doc(slotId);
+        const slotSnap = await transaction.get(slotRef);
+        
+        if (slotSnap.exists && slotSnap.data().isBooked && slotSnap.data().bookedBy !== sessionId) {
+          throw new HttpsError("failed-precondition", "SLOT_TAKEN_BY_OTHER");
+        }
+
+        transaction.update(slotRef, {
+          isBooked: true,
+          bookedBy: sessionId,
+          updatedAt: admin.firestore.FieldValue.serverTimestamp()
+        });
+      }
+
+      // 2. Update VideoCallSession
+      transaction.update(sessionRef, {
+        status: "paid",
+        razorpayPaymentId: razorpay_payment_id,
+        paymentVerifiedAt: admin.firestore.FieldValue.serverTimestamp(),
+        reminderScheduled: false,
       });
-    }
 
-    // ✅ Add to user's personal Bookings collection
-    await admin.firestore()
-      .collection("Bookings")
-      .doc(auth.uid)
-      .collection("sessions")
-      .doc(sessionId)
-      .set({
+      // 3. Add to user's personal Bookings
+      const userBookingRef = admin.firestore()
+        .collection("Bookings")
+        .doc(auth.uid)
+        .collection("sessions")
+        .doc(sessionId);
+
+      transaction.set(userBookingRef, {
         sessionId: sessionId,
-        counsellorUID: session.selectedSlot?.counsellorId || "",
-        counsellorName: session.selectedSlot?.counsellorUsername || "Anonymous",
-        date: session.selectedSlot?.date || "",
-        time: session.selectedSlot?.time || "",
+        counsellorUID: freshSession.counsellorId || freshSession.selectedSlot?.counsellorId || "",
+        counsellorName: freshSession.selectedSlot?.counsellorUsername || "Anonymous",
+        date: freshSession.selectedSlot?.date || "",
+        time: freshSession.selectedSlot?.time || "",
+        meetingLink: freshSession.meetingLink || "",
         status: "upcoming",
         createdAt: admin.firestore.FieldValue.serverTimestamp(),
       });
+    });
 
-    // 🔔 Notify counsellor AFTER payment success
-    await sendCounsellorNotification(
-      session.counsellorId,
-      "New session booked 📅",
-      "A student has booked a paid session with you."
-    );
+    // --- END TRANSACTION ---
 
-
-    await sendPushNotification(
-      auth.uid,
-      "Payment Successful 🎉",
-      "Your counselling session is confirmed. We look forward to seeing you."
-    );
+    // 🔔 Notify counsellor AFTER successful transaction
+    const finalSnap = await sessionRef.get();
+    const session = finalSnap.data();
+    const targetCounsellorId = session.counsellorId || session.selectedSlot?.counsellorId;
+    
+    if (targetCounsellorId) {
+      await sendCounsellorNotification(
+        targetCounsellorId,
+        "New session booked 📅",
+        "A student has booked a paid session with you."
+      );
+    }
 
 
     return { success: true };

@@ -110,6 +110,7 @@ class CalendarBackend {
 
       transaction.update(sessionRef, {
         status: "slot_selected", // Changed from "scheduled" to "slot_selected"
+        counsellorId, // Add counsellorId at top level for cloud functions
         selectedSlot: {
           date: dateStr,
           time,
