@@ -107,18 +107,18 @@ const CounsellorProfilePage: React.FC<CounsellorProfilePageProps> = ({
                 
                 <button
                   onClick={toggleEdit}
-                  className={`flex items-center gap-2 px-6 py-2.5 rounded-full font-luxury text-[10px] tracking-widest uppercase transition-all duration-500
+                  className={`flex items-center gap-3 px-8 py-3 rounded-full font-luxury text-xs tracking-widest uppercase transition-all duration-500 shadow-xl
                     ${isEditing 
-                      ? 'bg-[#4caf50] text-white shadow-lg shadow-[#4caf50]/20' 
-                      : 'bg-white/5 text-white/60 border border-white/10 hover:bg-white/10'}
+                      ? 'bg-green-500 text-white shadow-green-500/20' 
+                      : 'bg-blue-600 text-white hover:bg-blue-700 shadow-blue-600/20'}
                   `}
                 >
                   {saving ? (
                     <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
                   ) : isEditing ? (
-                    <><Save size={14} /> Commit Changes</>
+                    <><Save size={16} /> Commit Changes</>
                   ) : (
-                    <><Edit3 size={14} /> Modify Identity</>
+                    <><Edit3 size={16} /> Modify Identity</>
                   )}
                 </button>
               </div>
@@ -168,15 +168,19 @@ const CounsellorProfilePage: React.FC<CounsellorProfilePageProps> = ({
 
                 {/* Meeting Link */}
                 <div className="space-y-4">
-                  <label className="text-[10px] font-luxury tracking-[0.3em] text-white/30 uppercase ml-1 block">Session Meeting Link</label>
+                  <label className="text-xs font-luxury tracking-[0.3em] text-blue-400 uppercase ml-1 block font-bold">Session Meeting Link (Required)</label>
                   <div className="relative group">
-                    <ExternalLink className="absolute left-6 top-1/2 -translate-y-1/2 text-white/20 group-focus-within:text-[#5856d6] transition-colors" size={18} />
+                    <ExternalLink className={`absolute left-6 top-1/2 -translate-y-1/2 transition-colors ${isEditing ? 'text-blue-400' : 'text-white/20'}`} size={18} />
                     <input
                       value={meetingLink}
                       onChange={(e) => setMeetingLink(e.target.value)}
                       disabled={!isEditing}
                       placeholder="https://meet.google.com/..."
-                      className="w-full bg-white/[0.03] border border-white/10 rounded-3xl py-6 pl-16 pr-6 text-lg font-light outline-none focus:border-[#5856d6]/50 focus:bg-white/[0.05] transition-all disabled:opacity-40 disabled:cursor-not-allowed"
+                      className={`w-full bg-white/[0.03] border rounded-3xl py-6 pl-16 pr-6 text-lg font-light outline-none transition-all
+                        ${isEditing 
+                          ? 'border-blue-500/50 bg-white/[0.07] shadow-[0_0_20px_rgba(59,130,246,0.1)]' 
+                          : 'border-white/10 opacity-40 cursor-not-allowed'}
+                      `}
                     />
                   </div>
                 </div>
