@@ -34,7 +34,7 @@ const CounsellorLogin: React.FC = () => {
                 uid: user.uid,
                 email: email.trim(),
                 username: email.split('@')[0], // Default username
-                role: "counsellor",
+                role: "COUNSELOR",
                 createdAt: serverTimestamp(),
             });
 
@@ -51,7 +51,14 @@ const CounsellorLogin: React.FC = () => {
             setTimeout(() => {
                 navigate("/counsellor/dashboard", { replace: true });
             }, 500);
-...
+        } catch (error: any) {
+            console.error(error);
+            alert(error.message || "Signup failed");
+        } finally {
+            setLoading(false);
+        }
+    };
+
     const handleLogin = async () => {
         try {
             setLoading(true);
@@ -60,11 +67,11 @@ const CounsellorLogin: React.FC = () => {
             const userDoc = await getDoc(doc(db, "Users", credential.user.uid));
             if (userDoc.exists()) {
                 const userData = userDoc.data();
-                if (userData.role === "counsellor" || userData.role === "COUNSELOR") {
+                const rawRole = (userData.role || "").toUpperCase();
+                if (rawRole === "COUNSELOR" || rawRole === "COUNSELLOR") {
                     setRole("COUNSELOR");
                 }
             } else {
-                // Force role if document is missing (fallback)
                 setRole("COUNSELOR");
             }
 

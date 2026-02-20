@@ -63,14 +63,6 @@ const StudentLogin: React.FC = () => {
       return;
     }
 
-    // 🚨 ENFORCE EMAIL VERIFICATION
-    if (!auth?.currentUser?.emailVerified) {
-      alert("Please verify your email before logging in. Check your inbox.");
-      await auth?.signOut();
-      setLoading(false);
-      return;
-    }
-
     login();
     setRole("STUDENT");
     setTimeout(() => {

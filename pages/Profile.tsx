@@ -189,7 +189,7 @@ const Profile: React.FC = () => {
                     {role === 'COUNSELOR' && (
                       <>
                         <div className="space-y-3">
-                          <label className="text-[10px] font-luxury tracking-[0.3em] text-white/30 uppercase ml-1 block">Sign (Initials)</label>
+                          <label className="text-[10px] font-luxury tracking-[0.3em] text-white/30 uppercase ml-1 block">Counsellor Initials</label>
                           <input 
                             value={initials}
                             onChange={(e) => setInitials(e.target.value.toUpperCase())}
@@ -199,17 +199,20 @@ const Profile: React.FC = () => {
                             className="w-full bg-white/[0.03] border border-white/10 rounded-2xl p-4 text-white focus:border-brand-primary/50 outline-none transition-all disabled:opacity-50"
                           />
                         </div>
-                        <div className="space-y-3">
-                          <label className="text-[10px] font-luxury tracking-[0.3em] text-red-500 uppercase ml-1 block font-bold">Google Meet Link (Required)</label>
+                        <div className="space-y-3 md:col-span-2">
+                          <label className="text-[12px] font-luxury tracking-[0.3em] text-red-500 uppercase ml-1 block font-bold">Google Meet Link (Required for Sessions)</label>
                           <input 
                             value={meetingLink}
                             onChange={(e) => setMeetingLink(e.target.value)}
                             disabled={!isEditing}
-                            placeholder="https://meet.google.com/..."
-                            className={`w-full bg-white/[0.03] border rounded-2xl p-4 text-white outline-none transition-all
-                              ${isEditing ? 'border-red-500/50 shadow-[0_0_15px_rgba(239,68,68,0.1)]' : 'border-white/10 opacity-50'}
+                            placeholder="https://meet.google.com/xxx-xxxx-xxx"
+                            className={`w-full bg-white/[0.05] border-2 rounded-2xl p-5 text-white outline-none transition-all text-lg
+                              ${isEditing ? 'border-red-500 shadow-[0_0_20px_rgba(239,68,68,0.2)]' : 'border-red-900/30 opacity-80'}
                             `}
                           />
+                          {isEditing && (
+                            <p className="text-[10px] text-red-400/60 uppercase tracking-widest ml-1">This link will be shared with students when they book your sessions.</p>
+                          )}
                         </div>
                       </>
                     )}
