@@ -2,6 +2,7 @@ import React from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { User, LogOut, ChevronLeft } from "lucide-react";
 import { useApp } from "../context/AppContext";
+import logo from "@/src/assets/unmutedlogo.webp";
 
 const GlobalNavbar: React.FC = () => {
   const { isAuthenticated, role, logout } = useApp();
@@ -65,7 +66,7 @@ const GlobalNavbar: React.FC = () => {
           className="flex items-center gap-3 cursor-pointer group"
         >
           <div className="w-10 h-10 rounded-xl overflow-hidden border border-white/20 group-hover:border-brand-primary/50 transition-all shadow-lg">
-            <img src="/unmutedlogo.webp" alt="Unmuted Logo" className="w-full h-full object-cover" />
+            <img src={logo} alt="Unmuted Logo" className="w-full h-full object-cover" />
           </div>
           <div className="flex flex-col">
             <span className="text-sm font-bold tracking-tighter text-white group-hover:text-brand-primary transition-colors">UNMUTED</span>

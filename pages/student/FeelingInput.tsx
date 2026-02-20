@@ -75,8 +75,7 @@ const FeelingInput: React.FC = () => {
       </div>
 
       <div className="absolute bottom-12 text-white/5 font-luxury text-[10px] tracking-[1em] uppercase">
-        SECURE • PRIVATE • PROFESSIONAL
-      </div>
+                 SECURE • PRIVATE • RELIABLE      </div>
     </div>
   );
 };
