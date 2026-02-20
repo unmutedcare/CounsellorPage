@@ -45,17 +45,13 @@ const CounsellorLogin: React.FC = () => {
                 createdAt: serverTimestamp(),
             });
 
-            login();
             setRole("COUNSELOR");
-            navigate("/counsellor/dashboard", { replace: true });
-        } catch (error: any) {
-            console.error(error);
-            alert(error.message || "Signup failed");
-        } finally {
-            setLoading(false);
-        }
-    };
-
+            login();
+            // Wait for state to propagate
+            setTimeout(() => {
+                navigate("/counsellor/dashboard", { replace: true });
+            }, 500);
+...
     const handleLogin = async () => {
         try {
             setLoading(true);
@@ -68,11 +64,15 @@ const CounsellorLogin: React.FC = () => {
                     setRole("COUNSELOR");
                 }
             } else {
+                // Force role if document is missing (fallback)
                 setRole("COUNSELOR");
             }
 
             login();
-            navigate("/counsellor/dashboard", { replace: true });
+            // Wait for state to propagate
+            setTimeout(() => {
+                navigate("/counsellor/dashboard", { replace: true });
+            }, 500);
         } catch (error: any) {
             console.error(error);
             alert(error.message || "Login failed");

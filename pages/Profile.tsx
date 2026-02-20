@@ -32,6 +32,8 @@ const Profile: React.FC = () => {
   const [profile, setProfile] = useState<any>(null);
   const [isEditing, setIsEditing] = useState(false);
   const [username, setUsername] = useState("");
+  const [initials, setInitials] = useState("");
+  const [meetingLink, setMeetingLink] = useState("");
   const [saving, setSaving] = useState(false);
   const [success, setSuccess] = useState(false);
 
@@ -47,6 +49,8 @@ const Profile: React.FC = () => {
       setProfile(profileData);
       if (profileData) {
         setUsername(profileData.username || "");
+        setInitials(profileData.initials || "");
+        setMeetingLink(profileData.meetingLink || "");
       }
       setLoading(false);
     };
@@ -69,9 +73,12 @@ const Profile: React.FC = () => {
   const handleUpdateProfile = async () => {
     setSaving(true);
     try {
-      await updateUserProfile({ username });
+      await updateUserProfile({ 
+        username,
+        ...(role === 'COUNSELOR' ? { initials, meetingLink } : {})
+      });
       setSuccess(true);
-      setProfile({ ...profile, username });
+      setProfile({ ...profile, username, initials, meetingLink });
       setIsEditing(false);
       setTimeout(() => setSuccess(false), 3000);
     } catch (err: any) {
@@ -178,6 +185,34 @@ const Profile: React.FC = () => {
                         <span className="truncate">{profile?.email}</span>
                       </div>
                     </div>
+
+                    {role === 'COUNSELOR' && (
+                      <>
+                        <div className="space-y-3">
+                          <label className="text-[10px] font-luxury tracking-[0.3em] text-white/30 uppercase ml-1 block">Sign (Initials)</label>
+                          <input 
+                            value={initials}
+                            onChange={(e) => setInitials(e.target.value.toUpperCase())}
+                            disabled={!isEditing}
+                            placeholder="e.g. JD"
+                            maxLength={3}
+                            className="w-full bg-white/[0.03] border border-white/10 rounded-2xl p-4 text-white focus:border-brand-primary/50 outline-none transition-all disabled:opacity-50"
+                          />
+                        </div>
+                        <div className="space-y-3">
+                          <label className="text-[10px] font-luxury tracking-[0.3em] text-red-500 uppercase ml-1 block font-bold">Google Meet Link (Required)</label>
+                          <input 
+                            value={meetingLink}
+                            onChange={(e) => setMeetingLink(e.target.value)}
+                            disabled={!isEditing}
+                            placeholder="https://meet.google.com/..."
+                            className={`w-full bg-white/[0.03] border rounded-2xl p-4 text-white outline-none transition-all
+                              ${isEditing ? 'border-red-500/50 shadow-[0_0_15px_rgba(239,68,68,0.1)]' : 'border-white/10 opacity-50'}
+                            `}
+                          />
+                        </div>
+                      </>
+                    )}
                   </div>
 
                   <div className="pt-8 border-t border-white/5 flex items-center gap-4 opacity-20">

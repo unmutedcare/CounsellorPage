@@ -73,7 +73,9 @@ const StudentLogin: React.FC = () => {
 
     login();
     setRole("STUDENT");
-    navigate("/student/dashboard");
+    setTimeout(() => {
+      navigate("/student/dashboard");
+    }, 500);
     setLoading(false);
   };
 

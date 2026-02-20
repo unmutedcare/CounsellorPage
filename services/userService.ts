@@ -7,12 +7,24 @@ export const getUserProfile = async () => {
 
   const userDoc = await getDoc(doc(db, "Users", user.uid));
   if (userDoc.exists()) {
-    return userDoc.data();
+    const userData = userDoc.data();
+    if (userData.role === 'counsellor' || userData.role === 'COUNSELOR') {
+      const counsellorDoc = await getDoc(doc(db, "Counsellors", user.uid));
+      if (counsellorDoc.exists()) {
+        return { ...userData, ...counsellorDoc.data() };
+      }
+    }
+    return userData;
   }
   return null;
 };
 
-export const updateUserProfile = async (data: { username?: string }) => {
+export const updateUserProfile = async (data: { 
+  username?: string; 
+  initials?: string; 
+  meetingLink?: string;
+  role?: string;
+}) => {
   const user = auth?.currentUser;
   if (!user) throw new Error("User not authenticated");
 
@@ -26,8 +38,22 @@ export const updateUserProfile = async (data: { username?: string }) => {
   }
 
   const userRef = doc(db, "Users", user.uid);
-  await updateDoc(userRef, {
+  const counsellorRef = doc(db, "Counsellors", user.uid);
+
+  const updateObj: any = {
     ...data,
     updatedAt: new Date()
-  });
+  };
+
+  await updateDoc(userRef, updateObj);
+
+  // If it's a counsellor, also update the Counsellors collection
+  const userSnap = await getDoc(userRef);
+  const role = userSnap.data()?.role;
+  if (role === 'counsellor' || role === 'COUNSELOR') {
+    const counsellorSnap = await getDoc(counsellorRef);
+    if (counsellorSnap.exists()) {
+      await updateDoc(counsellorRef, updateObj);
+    }
+  }
 };
