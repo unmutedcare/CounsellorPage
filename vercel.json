@@ -1,8 +1,9 @@
 {
-  "rewrites": [
-    {
-      "source": "/(.*)",
-      "destination": "/index.html"
-    }
+  "version": 2,
+  "routes": [
+    { "src": "/assets/(.*)", "dest": "/assets/$1" },
+    { "src": "/unmutedlogo.webp", "dest": "/unmutedlogo.webp" },
+    { "src": "/logo.jpeg", "dest": "/logo.jpeg" },
+    { "src": "/(.*)", "dest": "/index.html" }
   ]
 }
