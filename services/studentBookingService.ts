@@ -18,6 +18,7 @@ export const fetchMyBookings = async () => {
       counsellorName: data.counsellorName || "Anonymous",
       date: data.date || "",
       time: data.time || "",
+      meetingLink: data.meetingLink || "",
       status: data.status || "upcoming",   // 👈 fallback for old bookings
       createdAt: data.createdAt || null,
     };

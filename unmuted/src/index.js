@@ -246,6 +246,11 @@ exports.verifyPayment = onCall(
 
       // 1. Check & Mark GlobalSession Slot
       const slotId = freshSession.selectedSlot?.slotDocId;
+      const sessionDate = freshSession.selectedSlot?.date;
+      const sessionTime = freshSession.selectedSlot?.time;
+
+      console.log(`Verifying slot: ${slotId} for ${sessionDate} at ${sessionTime}`);
+
       if (slotId) {
         const slotRef = admin.firestore().collection("GlobalSessions").doc(slotId);
         const slotSnap = await transaction.get(slotRef);
@@ -259,9 +264,26 @@ exports.verifyPayment = onCall(
           bookedBy: sessionId,
           updatedAt: admin.firestore.FieldValue.serverTimestamp()
         });
+
+        // 🛑 GLOBAL LOCK: Delete all other unbooked slots for the same date/time
+        if (sessionDate && sessionTime) {
+          const otherSlotsQuery = admin.firestore().collection("GlobalSessions")
+            .where("date", "==", sessionDate)
+            .where("time", "==", sessionTime)
+            .where("isBooked", "==", false);
+          
+          const otherSlotsSnap = await transaction.get(otherSlotsQuery);
+          otherSlotsSnap.forEach(otherDoc => {
+            if (otherDoc.id !== slotId) {
+              console.log(`Global Lock: Deleting redundant slot ${otherDoc.id}`);
+              transaction.delete(otherDoc.ref);
+            }
+          });
+        }
       }
 
       // 2. Update VideoCallSession
+      console.log(`Setting VideoCallSession ${sessionId} to paid. Link: ${freshSession.meetingLink}`);
       transaction.update(sessionRef, {
         status: "paid",
         razorpayPaymentId: razorpay_payment_id,
