@@ -97,12 +97,13 @@ async saveSessions(timings: TimingsMap): Promise<void> {
   const allSnap = await getDocs(qAll);
   
   const bookedTimesByOthers = new Set<string>();
-  const myExistingDocs: Record<string, any> = {};
+  const myExistingDocsByTime: Record<string, any[]> = {}; // Support multiple for cleanup
 
   allSnap.forEach(d => {
     const data = d.data();
     if (data.counsellorId === this.counsellorId) {
-      myExistingDocs[data.time] = d;
+      myExistingDocsByTime[data.time] ??= [];
+      myExistingDocsByTime[data.time].push(d);
     } else if (data.isBooked) {
       bookedTimesByOthers.add(data.time);
     }
@@ -110,7 +111,7 @@ async saveSessions(timings: TimingsMap): Promise<void> {
 
   const desiredSet = new Set(desiredTimes);
 
-  // ➕ CREATE missing slots
+  // ➕ CREATE or CLEANUP slots
   for (const time of desiredSet) {
     // Block if someone else is already booked at this time
     if (bookedTimesByOthers.has(time)) {
@@ -118,7 +119,10 @@ async saveSessions(timings: TimingsMap): Promise<void> {
       continue;
     }
 
-    if (!myExistingDocs[time]) {
+    const existing = myExistingDocsByTime[time] || [];
+    
+    if (existing.length === 0) {
+      // Create new
       await addDoc(globalRef, {
         counsellorId: this.counsellorId,
         counsellorInitials: initials,
@@ -130,13 +134,24 @@ async saveSessions(timings: TimingsMap): Promise<void> {
         bookedBy: null,
         timestamp: serverTimestamp(),
       });
+    } else if (existing.length > 1) {
+      // Cleanup duplicates (keep the first one, delete others if not booked)
+      for (let i = 1; i < existing.length; i++) {
+        if (!existing[i].data().isBooked) {
+          await deleteDoc(existing[i].ref);
+        }
+      }
     }
   }
 
   // ➖ DELETE removed slots (ONLY if not booked)
-  for (const [time, docSnap] of Object.entries(myExistingDocs)) {
-    if (!desiredSet.has(time) && !docSnap.data().isBooked) {
-      await deleteDoc(docSnap.ref);
+  for (const [time, docSnaps] of Object.entries(myExistingDocsByTime)) {
+    if (!desiredSet.has(time)) {
+      for (const d of docSnaps) {
+        if (!d.data().isBooked) {
+          await deleteDoc(d.ref);
+        }
+      }
     }
   }
 

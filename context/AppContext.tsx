@@ -44,11 +44,11 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           if (userDoc.exists()) {
             const userData = userDoc.data();
             let rawRole = (userData.role || "").toUpperCase();
-            // Handle spelling variations (COUNSELOR vs COUNSELLOR)
             let normalizedRole: Role = null;
             if (rawRole === "STUDENT") normalizedRole = "STUDENT";
             else if (rawRole === "COUNSELOR" || rawRole === "COUNSELLOR") normalizedRole = "COUNSELOR";
             
+            // Set the role and persist it
             setRole(normalizedRole);
           }
         } catch (error) {
@@ -56,7 +56,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         }
       } else {
         setIsAuthenticated(false);
-        setRole(null);
+        // Clear everything
+        setRoleState(null);
+        localStorage.removeItem("userRole");
       }
       setLoading(false);
     });
