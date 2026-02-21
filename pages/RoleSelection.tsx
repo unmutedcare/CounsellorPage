@@ -61,6 +61,15 @@ const RoleSelection: React.FC = () => {
           </div>
         </div>
       </div>
+
+      {/* Hidden Mentor Entrance (Top-Right Black Circle) */}
+      <button 
+        onClick={() => navigate("/mentor")}
+        className="absolute top-8 right-8 w-12 h-12 rounded-full bg-black/40 hover:bg-black/60 border border-white/5 transition-all cursor-pointer z-50 backdrop-blur-sm flex items-center justify-center group"
+        title="Mentor Access"
+      >
+        <div className="w-2 h-2 rounded-full bg-white/10 group-hover:bg-white/20 transition-colors" />
+      </button>
     </div>
   );
 };

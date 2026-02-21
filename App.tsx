@@ -38,6 +38,7 @@ const CounsellorProfilePage = lazy(() => import("./pages/counselor/CounselorProf
 const SetTimings = lazy(() => import("./pages/counselor/SetTimings"));
 const UpcomingCases = lazy(() => import("./pages/counselor/upcoming"));
 const CompletedCases = lazy(() => import("./pages/counselor/CompletedCases"));
+const MentorPortal = lazy(() => import("./pages/MentorPortal"));
 
 const App: React.FC = () => {
   return (
@@ -163,6 +164,9 @@ const App: React.FC = () => {
                   </ProtectedRoute>
                 }
               />
+
+              {/* Mentor Portal */}
+              <Route path="/mentor" element={<MentorPortal />} />
             </Route>
           </Routes>
         </Suspense>
