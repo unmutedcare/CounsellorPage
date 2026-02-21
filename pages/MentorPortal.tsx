@@ -88,15 +88,25 @@ const MentorPortal: React.FC = () => {
     setLoading(true);
     try {
       const now = new Date();
-      
-      // 1. Fetch PAID/COMPLETED sessions
+      const counsellorsMap: Record<string, CounsellorStats> = {};
+
+      // 1. Fetch ALL registered counsellors first
+      const counsellorsSnap = await getDocs(collection(db, "Counsellors"));
+      counsellorsSnap.forEach(doc => {
+        const data = doc.data();
+        const cid = doc.id;
+        const name = data.username || data.initials || "Anonymous";
+        counsellorsMap[cid] = createEmptyStats(cid, name);
+      });
+
+      // 2. Fetch PAID/COMPLETED sessions
       const qSessions = query(
         collection(db, "VideoCallSession"),
         where("status", "in", ["paid", "live", "completed"])
       );
       const sessionsSnap = await getDocs(qSessions);
 
-      // 2. Fetch ALL global slots to count weekly availability
+      // 3. Fetch ALL global slots to count weekly availability
       const weekFromNow = new Date();
       weekFromNow.setDate(now.getDate() + 7);
       const weekFromNowStr = weekFromNow.toISOString().split('T')[0];
@@ -108,8 +118,6 @@ const MentorPortal: React.FC = () => {
         where("date", "<=", weekFromNowStr)
       );
       const slotsSnap = await getDocs(qSlots);
-
-      const counsellorsMap: Record<string, CounsellorStats> = {};
 
       // Process Weekly Slots
       slotsSnap.forEach(doc => {
@@ -137,14 +145,13 @@ const MentorPortal: React.FC = () => {
         const cid = data.counsellorId || data.selectedSlot?.counsellorId;
         if (!cid) return;
 
-        const counsellorName = data.selectedSlot?.counsellorUsername || data.selectedSlot?.counsellorInitials || "Anonymous";
         const studentId = data.student?.uid || data.studentId;
         const studentName = data.student?.username || "Unknown";
         const problem = data.description || (data.emotions ? data.emotions.join(", ") : "N/A");
         const sessionTs = data.sessionTimestamp?.toDate() || data.createdAt?.toDate() || new Date(0);
 
         if (!counsellorsMap[cid]) {
-          counsellorsMap[cid] = createEmptyStats(cid, counsellorName);
+          counsellorsMap[cid] = createEmptyStats(cid, data.selectedSlot?.counsellorUsername || "Anonymous");
         }
 
         const current = counsellorsMap[cid];
