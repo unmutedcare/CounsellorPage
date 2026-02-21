@@ -81,41 +81,51 @@ class CalendarBackend {
     const slotRef = doc(this.db, "GlobalSessions", slotDocId);
     const sessionRef = doc(this.db, "VideoCallSession", sessionId);
     const counsellorRef = doc(this.db, "Counsellors", counsellorId);
+    const userRef = doc(this.db, "Users", counsellorId);
 
     try {
       await runTransaction(this.db, async (transaction) => {
         // 1️⃣ Check slot availability
         const slotSnapshot = await transaction.get(slotRef);
-        console.log("🔍 Slot Snapshot exists:", slotSnapshot.exists());
-        if (!slotSnapshot.exists()) throw new Error("Slot document not found in database.");
+        if (!slotSnapshot.exists()) throw new Error("Slot document not found.");
         
-        const isBooked = slotSnapshot.data()?.isBooked ?? true;
-        console.log("🔍 Slot isBooked status:", isBooked);
-
-        if (isBooked) {
+        if (slotSnapshot.data()?.isBooked) {
           throw new Error("Slot already booked");
         }
 
         const slotData = slotSnapshot.data()!;
 
-        // 2️⃣ Fetch counsellor (meeting link safety check)
+        // 2️⃣ Fetch counsellor (Check both Counsellors and Users collections for the link)
+        let profileData: any = null;
         const counsellorSnapshot = await transaction.get(counsellorRef);
-        console.log("🔍 Counsellor Snapshot exists:", counsellorSnapshot.exists());
-        if (!counsellorSnapshot.exists()) {
-          throw new Error("Counsellor profile not found. Please ensure the counsellor has completed their profile setup.");
+        
+        if (counsellorSnapshot.exists()) {
+          profileData = counsellorSnapshot.data();
         }
 
-        const counsellorData = counsellorSnapshot.data()!;
-        const meetingLink = counsellorData.meetingLink;
-        console.log("🔍 Meeting Link found:", !!meetingLink);
+        // If link is missing in Counsellors doc, try the main Users doc
+        if (!profileData?.meetingLink || profileData.meetingLink.trim() === "") {
+          const userSnapshot = await transaction.get(userRef);
+          if (userSnapshot.exists()) {
+            profileData = { ...profileData, ...userSnapshot.data() };
+          }
+        }
 
+        if (!profileData) {
+          throw new Error("Counsellor profile not found.");
+        }
+
+        const meetingLink = profileData.meetingLink;
         if (!meetingLink || meetingLink.trim() === "") {
-          throw new Error("Meeting link not set by counsellor. A meeting link is required to book a session.");
+          throw new Error("Meeting link not set by counsellor. Please ensure you have set your Google Meet link in your profile.");
         }
+
+        // Get the most up-to-date names
+        const finalInitials = profileData.initials || counsellorInitials || "NA";
+        const finalUsername = profileData.username || slotData.counsellorUsername || "Counsellor";
 
         // 3️⃣ Mark VideoCallSession with selected slot details
         const sessionTimestamp = this.buildSessionTimestamp(dateStr, time);
-        console.log("📅 Session Timestamp built:", sessionTimestamp.toDate());
 
         transaction.update(sessionRef, {
           status: "slot_selected",
@@ -124,18 +134,16 @@ class CalendarBackend {
             date: dateStr,
             time,
             counsellorId,
-            counsellorInitials,
-            counsellorUsername: slotData.counsellorUsername,
-            counsellorEmail: slotData.counsellorEmail,
+            counsellorInitials: finalInitials,
+            counsellorUsername: finalUsername,
+            counsellorEmail: profileData.email || slotData.counsellorEmail || "",
             slotDocId,
           },
           sessionTimestamp,
           meetingLink,
           updatedAt: serverTimestamp(),
         });
-        console.log("✅ Transaction updates queued successfully");
       });
-      console.log("✨ Transaction committed successfully");
     } catch (error: any) {
       console.error("❌ bookSlot error:", error);
       throw error;

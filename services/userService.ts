@@ -46,13 +46,18 @@ export const updateUserProfile = async (data: {
     updatedAt: new Date()
   };
 
-  // Use setDoc with merge: true to avoid "No document to update" errors
+  // 1. Update the main Users document
   await setDoc(userRef, updateObj, { merge: true });
 
-  // If it's a counsellor, also update the Counsellors collection
+  // 2. Fetch the user to determine role (case-insensitive)
   const userSnap = await getDoc(userRef);
-  const role = userSnap.data()?.role;
-  if (role === 'counsellor' || role === 'COUNSELOR') {
-    await setDoc(counsellorRef, updateObj, { merge: true });
+  const rawRole = (userSnap.data()?.role || "").toUpperCase();
+  
+  // 3. If it's a counsellor, sync everything to the Counsellors collection
+  if (rawRole === 'COUNSELLOR' || rawRole === 'COUNSELOR') {
+    await setDoc(counsellorRef, {
+      ...updateObj,
+      uid: user.uid, // Ensure UID is always present
+    }, { merge: true });
   }
 };
