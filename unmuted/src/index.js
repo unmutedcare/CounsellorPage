@@ -238,41 +238,48 @@ exports.verifyPayment = onCall(
 
     // --- START TRANSACTION ---
     await admin.firestore().runTransaction(async (transaction) => {
+      // 1️⃣ ALL READS FIRST
       const freshSnap = await transaction.get(sessionRef);
       if (!freshSnap.exists) throw new HttpsError("not-found", "Session not found");
       const freshSession = freshSnap.data();
 
       if (freshSession.status === "paid") return; // Already processed
 
-      // 1. Check & Mark GlobalSession Slot
       const slotId = freshSession.selectedSlot?.slotDocId;
       const sessionDate = freshSession.selectedSlot?.date;
       const sessionTime = freshSession.selectedSlot?.time;
 
-      console.log(`Verifying slot: ${slotId} for ${sessionDate} at ${sessionTime}`);
+      let slotSnap = null;
+      let otherSlotsSnap = null;
 
       if (slotId) {
         const slotRef = admin.firestore().collection("GlobalSessions").doc(slotId);
-        const slotSnap = await transaction.get(slotRef);
-        
-        if (slotSnap.exists && slotSnap.data().isBooked && slotSnap.data().bookedBy !== sessionId) {
-          throw new HttpsError("failed-precondition", "SLOT_TAKEN_BY_OTHER");
-        }
+        slotSnap = await transaction.get(slotRef);
 
-        transaction.update(slotRef, {
-          isBooked: true,
-          bookedBy: sessionId,
-          updatedAt: admin.firestore.FieldValue.serverTimestamp()
-        });
-
-        // 🛑 GLOBAL LOCK: Delete all other unbooked slots for the same date/time
         if (sessionDate && sessionTime) {
           const otherSlotsQuery = admin.firestore().collection("GlobalSessions")
             .where("date", "==", sessionDate)
             .where("time", "==", sessionTime)
             .where("isBooked", "==", false);
-          
-          const otherSlotsSnap = await transaction.get(otherSlotsQuery);
+          otherSlotsSnap = await transaction.get(otherSlotsQuery);
+        }
+      }
+
+      // 2️⃣ ALL WRITES AFTER
+      if (slotSnap && slotSnap.exists) {
+        if (slotSnap.data().isBooked && slotSnap.data().bookedBy !== sessionId) {
+          throw new HttpsError("failed-precondition", "SLOT_TAKEN_BY_OTHER");
+        }
+
+        // Mark specific slot as booked
+        transaction.update(slotSnap.ref, {
+          isBooked: true,
+          bookedBy: sessionId,
+          updatedAt: admin.firestore.FieldValue.serverTimestamp()
+        });
+
+        // 🛑 GLOBAL LOCK: Delete redundant available slots
+        if (otherSlotsSnap) {
           otherSlotsSnap.forEach(otherDoc => {
             if (otherDoc.id !== slotId) {
               console.log(`Global Lock: Deleting redundant slot ${otherDoc.id}`);
@@ -282,7 +289,7 @@ exports.verifyPayment = onCall(
         }
       }
 
-      // 2. Update VideoCallSession
+      // Update VideoCallSession
       console.log(`Setting VideoCallSession ${sessionId} to paid. Link: ${freshSession.meetingLink}`);
       transaction.update(sessionRef, {
         status: "paid",
@@ -291,7 +298,7 @@ exports.verifyPayment = onCall(
         reminderScheduled: false,
       });
 
-      // 3. Add to user's personal Bookings
+      // Add to user's personal Bookings
       const userBookingRef = admin.firestore()
         .collection("Bookings")
         .doc(auth.uid)
