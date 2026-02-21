@@ -1,25 +1,27 @@
-import { collection, getDocs } from "firebase/firestore";
+import { collection, getDocs, query, where } from "firebase/firestore";
 import { auth, db } from "../firebase/firebase";
 
 export const fetchCounsellorSessions = async () => {
   const counsellor = auth.currentUser;
   if (!counsellor) return [];
 
-  const snapshot = await getDocs(collection(db, "Bookings"));
+  // More efficient: query VideoCallSession directly as it contains counsellorId
+  const q = query(
+    collection(db, "VideoCallSession"),
+    where("selectedSlot.counsellorId", "==", counsellor.uid)
+  );
 
-  const all: any[] = [];
-
-  for (const studentDoc of snapshot.docs) {
-    const sessionsRef = collection(db, "Bookings", studentDoc.id, "sessions");
-    const sessionsSnap = await getDocs(sessionsRef);
-
-    sessionsSnap.forEach(doc => {
-      const data = doc.data();
-      if (data.counsellorUID === counsellor.uid) {
-        all.push({ id: doc.id, studentId: studentDoc.id, ...data });
-      }
-    });
-  }
-
-  return all;
+  const snapshot = await getDocs(q);
+  return snapshot.docs.map(doc => {
+    const data = doc.data();
+    const slot = data.selectedSlot || {};
+    return {
+      id: doc.id,
+      studentId: data.studentId || "Unknown",
+      date: slot.date || "",
+      time: slot.time || "",
+      status: data.status || "pending",
+      ...data
+    };
+  });
 };

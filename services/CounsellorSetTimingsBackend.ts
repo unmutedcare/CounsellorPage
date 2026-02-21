@@ -27,19 +27,16 @@ export class CounsellorTimingBackend {
   // ----------------------------------------------------
   async initializeCounsellorDocument(): Promise<void> {
     const ref = doc(this.db, "Counsellors", this.counsellorId);
+    
+    // Always use setDoc with merge to ensure doc exists
+    await setDoc(ref, {
+      uid: this.counsellorId,
+      updatedAt: serverTimestamp(),
+    }, { merge: true });
+
     const snap = await getDoc(ref);
-
-    if (!snap.exists()) {
-      await setDoc(ref, {
-        uid: this.counsellorId,
-        sessions: {},
-        createdAt: serverTimestamp(),
-      });
-      return;
-    }
-
-    if (!snap.data().sessions) {
-      await updateDoc(ref, { sessions: {} });
+    if (!snap.data()?.sessions) {
+      await setDoc(ref, { sessions: {} }, { merge: true });
     }
   }
 
@@ -92,24 +89,36 @@ async saveSessions(timings: TimingsMap): Promise<void> {
   const globalRef = collection(this.db, "GlobalSessions");
   const counsellorRef = doc(this.db, "Counsellors", this.counsellorId);
 
-  const q = query(
+  // 1. Fetch ALL existing slots for this date across ALL counsellors
+  const qAll = query(
     globalRef,
-    where("counsellorId", "==", this.counsellorId),
     where("date", "==", date)
   );
+  const allSnap = await getDocs(qAll);
+  
+  const bookedTimesByOthers = new Set<string>();
+  const myExistingDocs: Record<string, any> = {};
 
-  const snap = await getDocs(q);
-
-  const existingByTime: Record<string, any> = {};
-  snap.forEach(d => {
-    existingByTime[d.data().time] = d;
+  allSnap.forEach(d => {
+    const data = d.data();
+    if (data.counsellorId === this.counsellorId) {
+      myExistingDocs[data.time] = d;
+    } else if (data.isBooked) {
+      bookedTimesByOthers.add(data.time);
+    }
   });
 
   const desiredSet = new Set(desiredTimes);
 
   // ➕ CREATE missing slots
   for (const time of desiredSet) {
-    if (!existingByTime[time]) {
+    // Block if someone else is already booked at this time
+    if (bookedTimesByOthers.has(time)) {
+      console.warn(`Time ${time} on ${date} is already booked by another counsellor. Skipping.`);
+      continue;
+    }
+
+    if (!myExistingDocs[time]) {
       await addDoc(globalRef, {
         counsellorId: this.counsellorId,
         counsellorInitials: initials,
@@ -125,13 +134,13 @@ async saveSessions(timings: TimingsMap): Promise<void> {
   }
 
   // ➖ DELETE removed slots (ONLY if not booked)
-  for (const [time, docSnap] of Object.entries(existingByTime)) {
+  for (const [time, docSnap] of Object.entries(myExistingDocs)) {
     if (!desiredSet.has(time) && !docSnap.data().isBooked) {
       await deleteDoc(docSnap.ref);
     }
   }
 
-  // ✅ UPDATE counsellor.sessions PER DATE (CRITICAL FIX)
+  // ✅ UPDATE counsellor.sessions PER DATE
   const sortedTimes = [...desiredTimes].sort();
 
   await setDoc(
