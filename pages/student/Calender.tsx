@@ -133,8 +133,8 @@ const CalendarPage: React.FC<CalendarPageProps> = ({ sessionId }) => {
       });
 
       navigate(`/student/payment?sessionId=${currentSessionId}`);
-    } catch (err) {
-      alert("Scheduling failed. Please check your connection.");
+    } catch (err: any) {
+      alert(`Scheduling failed: ${err.message || err}`);
       console.error(err);
     }
   };

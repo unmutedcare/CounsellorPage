@@ -77,54 +77,69 @@ class CalendarBackend {
     counsellorId: string;
     counsellorInitials: string;
   }): Promise<void> {
+    console.log("🚀 STARTING bookSlot:", { sessionId, slotDocId, dateStr, time, counsellorId });
     const slotRef = doc(this.db, "GlobalSessions", slotDocId);
     const sessionRef = doc(this.db, "VideoCallSession", sessionId);
     const counsellorRef = doc(this.db, "Counsellors", counsellorId);
 
-    await runTransaction(this.db, async (transaction) => {
-      // 1️⃣ Check slot availability (Flutter-equivalent)
-      const slotSnapshot = await transaction.get(slotRef);
-      const isBooked = slotSnapshot.data()?.isBooked ?? true;
+    try {
+      await runTransaction(this.db, async (transaction) => {
+        // 1️⃣ Check slot availability
+        const slotSnapshot = await transaction.get(slotRef);
+        console.log("🔍 Slot Snapshot exists:", slotSnapshot.exists());
+        if (!slotSnapshot.exists()) throw new Error("Slot document not found in database.");
+        
+        const isBooked = slotSnapshot.data()?.isBooked ?? true;
+        console.log("🔍 Slot isBooked status:", isBooked);
 
-      if (!slotSnapshot.exists() || isBooked) {
-        throw new Error("Slot already booked");
-      }
+        if (isBooked) {
+          throw new Error("Slot already booked");
+        }
 
-      const slotData = slotSnapshot.data()!;
+        const slotData = slotSnapshot.data()!;
 
-      // 2️⃣ Fetch counsellor (meeting link safety check)
-      const counsellorSnapshot = await transaction.get(counsellorRef);
-      if (!counsellorSnapshot.exists()) {
-        throw new Error("Counsellor not found");
-      }
+        // 2️⃣ Fetch counsellor (meeting link safety check)
+        const counsellorSnapshot = await transaction.get(counsellorRef);
+        console.log("🔍 Counsellor Snapshot exists:", counsellorSnapshot.exists());
+        if (!counsellorSnapshot.exists()) {
+          throw new Error("Counsellor profile not found. Please ensure the counsellor has completed their profile setup.");
+        }
 
-      const counsellorData = counsellorSnapshot.data()!;
-      const meetingLink = counsellorData.meetingLink;
+        const counsellorData = counsellorSnapshot.data()!;
+        const meetingLink = counsellorData.meetingLink;
+        console.log("🔍 Meeting Link found:", !!meetingLink);
 
-      if (!meetingLink || meetingLink.trim() === "") {
-        throw new Error("Meeting link not set by counsellor");
-      }
+        if (!meetingLink || meetingLink.trim() === "") {
+          throw new Error("Meeting link not set by counsellor. A meeting link is required to book a session.");
+        }
 
-      // 3️⃣ Mark VideoCallSession with selected slot details (but don't mark GlobalSession as booked yet)
-      const sessionTimestamp = this.buildSessionTimestamp(dateStr, time);
+        // 3️⃣ Mark VideoCallSession with selected slot details
+        const sessionTimestamp = this.buildSessionTimestamp(dateStr, time);
+        console.log("📅 Session Timestamp built:", sessionTimestamp.toDate());
 
-      transaction.update(sessionRef, {
-        status: "slot_selected", // Changed from "scheduled" to "slot_selected"
-        counsellorId, // Add counsellorId at top level for cloud functions
-        selectedSlot: {
-          date: dateStr,
-          time,
+        transaction.update(sessionRef, {
+          status: "slot_selected",
           counsellorId,
-          counsellorInitials,
-          counsellorUsername: slotData.counsellorUsername,
-          counsellorEmail: slotData.counsellorEmail,
-          slotDocId,
-        },
-        sessionTimestamp,
-        meetingLink,
-        updatedAt: serverTimestamp(),
+          selectedSlot: {
+            date: dateStr,
+            time,
+            counsellorId,
+            counsellorInitials,
+            counsellorUsername: slotData.counsellorUsername,
+            counsellorEmail: slotData.counsellorEmail,
+            slotDocId,
+          },
+          sessionTimestamp,
+          meetingLink,
+          updatedAt: serverTimestamp(),
+        });
+        console.log("✅ Transaction updates queued successfully");
       });
-    });
+      console.log("✨ Transaction committed successfully");
+    } catch (error: any) {
+      console.error("❌ bookSlot error:", error);
+      throw error;
+    }
   }
 
   /**
