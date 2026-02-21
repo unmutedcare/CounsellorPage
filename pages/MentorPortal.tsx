@@ -19,7 +19,9 @@ import {
   TrendingUp,
   History,
   CheckCircle2,
-  Clock
+  Clock,
+  LayoutGrid,
+  CalendarDays
 } from "lucide-react";
 
 interface SessionRecord {
@@ -28,6 +30,12 @@ interface SessionRecord {
   problem: string;
   date: Date;
   dateStr: string;
+  isFuture: boolean;
+}
+
+interface AvailableSlot {
+  date: string;
+  time: string;
 }
 
 interface CounsellorStats {
@@ -35,6 +43,8 @@ interface CounsellorStats {
   counsellorName: string;
   totalSessions: number;
   uniqueStudents: Set<string>;
+  weeklyAvailableSlots: number;
+  availableSlotDetails: AvailableSlot[];
   sessions: SessionRecord[];
 }
 
@@ -77,37 +87,67 @@ const MentorPortal: React.FC = () => {
   const fetchStats = async () => {
     setLoading(true);
     try {
-      // 1. Fetch only PAID or COMPLETED sessions
-      const q = query(
+      const now = new Date();
+      
+      // 1. Fetch PAID/COMPLETED sessions
+      const qSessions = query(
         collection(db, "VideoCallSession"),
         where("status", "in", ["paid", "live", "completed"])
       );
-      
-      const sessionsSnap = await getDocs(q);
+      const sessionsSnap = await getDocs(qSessions);
+
+      // 2. Fetch ALL global slots to count weekly availability
+      const weekFromNow = new Date();
+      weekFromNow.setDate(now.getDate() + 7);
+      const weekFromNowStr = weekFromNow.toISOString().split('T')[0];
+      const todayStr = now.toISOString().split('T')[0];
+
+      const qSlots = query(
+        collection(db, "GlobalSessions"),
+        where("date", ">=", todayStr),
+        where("date", "<=", weekFromNowStr)
+      );
+      const slotsSnap = await getDocs(qSlots);
+
       const counsellorsMap: Record<string, CounsellorStats> = {};
 
+      // Process Weekly Slots
+      slotsSnap.forEach(doc => {
+        const data = doc.data();
+        const cid = data.counsellorId;
+        if (!cid) return;
+
+        if (!counsellorsMap[cid]) {
+          counsellorsMap[cid] = createEmptyStats(cid, data.counsellorUsername || data.counsellorInitials || "Anonymous");
+        }
+        
+        // Only count unbooked slots for availability
+        if (!data.isBooked) {
+          counsellorsMap[cid].weeklyAvailableSlots += 1;
+          counsellorsMap[cid].availableSlotDetails.push({
+            date: data.date,
+            time: data.time
+          });
+        }
+      });
+
+      // Process Session History
       sessionsSnap.forEach((doc) => {
         const data = doc.data();
-        const counsellorId = data.counsellorId || data.selectedSlot?.counsellorId;
+        const cid = data.counsellorId || data.selectedSlot?.counsellorId;
+        if (!cid) return;
+
         const counsellorName = data.selectedSlot?.counsellorUsername || data.selectedSlot?.counsellorInitials || "Anonymous";
         const studentId = data.student?.uid || data.studentId;
         const studentName = data.student?.username || "Unknown";
         const problem = data.description || (data.emotions ? data.emotions.join(", ") : "N/A");
         const sessionTs = data.sessionTimestamp?.toDate() || data.createdAt?.toDate() || new Date(0);
 
-        if (!counsellorId) return;
-
-        if (!counsellorsMap[counsellorId]) {
-          counsellorsMap[counsellorId] = {
-            counsellorId,
-            counsellorName,
-            totalSessions: 0,
-            uniqueStudents: new Set(),
-            sessions: [],
-          };
+        if (!counsellorsMap[cid]) {
+          counsellorsMap[cid] = createEmptyStats(cid, counsellorName);
         }
 
-        const current = counsellorsMap[counsellorId];
+        const current = counsellorsMap[cid];
         current.totalSessions += 1;
         if (studentId) current.uniqueStudents.add(studentId);
 
@@ -117,12 +157,18 @@ const MentorPortal: React.FC = () => {
           problem,
           date: sessionTs,
           dateStr: sessionTs.toLocaleString(),
+          isFuture: sessionTs > now
         });
       });
 
-      // Sort sessions for each counsellor by date descending (newest first)
+      // Final processing: Sort everything
       const result = Object.values(counsellorsMap).map(c => {
         c.sessions.sort((a, b) => b.date.getTime() - a.date.getTime());
+        // Sort available slots by date then time
+        c.availableSlotDetails.sort((a, b) => {
+          if (a.date !== b.date) return a.date.localeCompare(b.date);
+          return a.time.localeCompare(b.time);
+        });
         return c;
       });
 
@@ -133,6 +179,16 @@ const MentorPortal: React.FC = () => {
       setLoading(false);
     }
   };
+
+  const createEmptyStats = (id: string, name: string): CounsellorStats => ({
+    counsellorId: id,
+    counsellorName: name,
+    totalSessions: 0,
+    uniqueStudents: new Set(),
+    weeklyAvailableSlots: 0,
+    availableSlotDetails: [],
+    sessions: [],
+  });
 
   const toggleCounsellor = (id: string) => {
     setExpandedCounsellor(expandedCounsellor === id ? null : id);
@@ -209,14 +265,14 @@ const MentorPortal: React.FC = () => {
         {/* Header Stats */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
           <StatCard icon={<Users className="text-blue-400" />} label="Active Counsellors" value={stats.length.toString()} />
-          <StatCard icon={<TrendingUp className="text-green-400" />} label="Total Paid Bookings" value={stats.reduce((acc, curr) => acc + curr.totalSessions, 0).toString()} />
-          <StatCard icon={<History className="text-purple-400" />} label="Last Sync" value={new Date().toLocaleTimeString()} />
+          <StatCard icon={<LayoutGrid className="text-green-400" />} label="Total Free Slots" value={stats.reduce((acc, curr) => acc + curr.weeklyAvailableSlots, 0).toString()} />
+          <StatCard icon={<History className="text-purple-400" />} label="Last Global Sync" value={new Date().toLocaleTimeString()} />
         </div>
 
         <div className="space-y-6">
           <div className="flex items-center justify-between px-4">
-            <h3 className="text-sm font-luxury tracking-[0.3em] text-white/40 uppercase">Counsellor Records</h3>
-            <p className="text-[9px] text-white/20 uppercase tracking-widest font-luxury">Click a row to view student cases</p>
+            <h3 className="text-sm font-luxury tracking-[0.3em] text-white/40 uppercase">Counsellor Performance</h3>
+            <p className="text-[9px] text-white/20 uppercase tracking-widest font-luxury">Click rows to expand details</p>
           </div>
 
           {loading ? (
@@ -225,15 +281,14 @@ const MentorPortal: React.FC = () => {
             </div>
           ) : stats.length === 0 ? (
             <div className="glass-panel p-24 text-center border-dashed border-white/5 opacity-40">
-              <p className="font-luxury tracking-widest text-sm uppercase">No verified paid sessions found.</p>
+              <p className="font-luxury tracking-widest text-sm uppercase">No verified records found.</p>
             </div>
           ) : (
             stats.map((c) => (
               <div key={c.counsellorId} className="space-y-4">
-                {/* Counsellor Summary Row */}
                 <div 
                   onClick={() => toggleCounsellor(c.counsellorId)}
-                  className={`glass-panel p-8 border hover:border-white/20 transition-all cursor-pointer group flex flex-col md:flex-row justify-between items-center gap-8
+                  className={`glass-panel p-8 border hover:border-white/20 transition-all cursor-pointer group flex flex-col lg:flex-row justify-between items-center gap-8
                     ${expandedCounsellor === c.counsellorId ? 'border-white/20 bg-white/[0.05]' : 'border-white/5'}
                   `}
                 >
@@ -249,11 +304,15 @@ const MentorPortal: React.FC = () => {
 
                   <div className="flex gap-12">
                     <div className="text-center">
-                      <p className="text-[9px] font-luxury text-white/20 uppercase tracking-widest mb-1">Total Sessions</p>
+                      <p className="text-[9px] font-luxury text-white/20 uppercase tracking-widest mb-1">Open Slots</p>
+                      <p className="text-xl font-bold text-green-400 font-mono">{c.weeklyAvailableSlots}</p>
+                    </div>
+                    <div className="text-center">
+                      <p className="text-[9px] font-luxury text-white/20 uppercase tracking-widest mb-1">Paid Cases</p>
                       <p className="text-xl font-bold text-blue-400 font-mono">{c.totalSessions}</p>
                     </div>
                     <div className="text-center">
-                      <p className="text-[9px] font-luxury text-white/20 uppercase tracking-widest mb-1">Unique Students</p>
+                      <p className="text-[9px] font-luxury text-white/20 uppercase tracking-widest mb-1">Unique Users</p>
                       <p className="text-xl font-bold text-white/80 font-mono">{c.uniqueStudents.size}</p>
                     </div>
                   </div>
@@ -263,34 +322,58 @@ const MentorPortal: React.FC = () => {
                   </div>
                 </div>
 
-                {/* Expanded Cases Dropdown */}
                 {expandedCounsellor === c.counsellorId && (
-                  <div className="glass-panel border-white/5 p-8 bg-white/[0.01] animate-in slide-in-from-top-4 duration-500 overflow-hidden">
+                  <div className="glass-panel border-white/5 p-10 bg-white/[0.01] animate-in slide-in-from-top-4 duration-500 overflow-hidden space-y-12">
+                    
+                    {/* 1. Availability Section */}
+                    <div className="space-y-6">
+                      <div className="flex items-center gap-3 border-b border-white/5 pb-4">
+                        <CalendarDays size={16} className="text-green-400" />
+                        <h5 className="text-xs font-luxury tracking-[0.3em] text-white/60 uppercase">Availability Windows (Unbooked)</h5>
+                      </div>
+                      
+                      {c.availableSlotDetails.length === 0 ? (
+                        <p className="text-xs text-white/20 italic ml-4">No open slots currently posted for this week.</p>
+                      ) : (
+                        <div className="flex flex-wrap gap-3">
+                          {c.availableSlotDetails.map((slot, i) => (
+                            <div key={i} className="px-4 py-2 bg-green-500/5 border border-green-500/20 rounded-xl flex items-center gap-3">
+                              <span className="text-[10px] font-bold text-green-400 font-mono">{slot.date}</span>
+                              <div className="w-[1px] h-3 bg-white/10" />
+                              <span className="text-[10px] text-white/60 uppercase tracking-widest">{slot.time}</span>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+
+                    {/* 2. Engagement Section */}
                     <div className="space-y-6">
                       <div className="flex items-center gap-3 border-b border-white/5 pb-4">
                         <MessageSquare size={16} className="text-blue-400" />
-                        <h5 className="text-xs font-luxury tracking-[0.3em] text-white/60 uppercase">Detailed Case History</h5>
+                        <h5 className="text-xs font-luxury tracking-[0.3em] text-white/60 uppercase">Engagement Log (Paid)</h5>
                       </div>
 
                       <div className="grid grid-cols-1 gap-4">
-                        {c.sessions.map((session, index) => (
+                        {c.sessions.map((session) => (
                           <div 
                             key={session.sessionId}
                             className={`p-6 rounded-3xl border transition-all flex flex-col md:flex-row justify-between items-start md:items-center gap-6
-                              ${index === 0 
+                              ${session.isFuture 
                                 ? 'bg-red-500/5 border-red-500/20 shadow-[0_0_30px_rgba(239,68,68,0.05)]' 
                                 : 'bg-blue-500/5 border-blue-500/10'}
                             `}
                           >
                             <div className="space-y-3">
                               <div className="flex items-center gap-3">
-                                <span className={`w-1.5 h-1.5 rounded-full animate-pulse ${index === 0 ? 'bg-red-500' : 'bg-blue-400'}`} />
-                                <span className={`text-sm font-bold tracking-tight ${index === 0 ? 'text-red-400' : 'text-blue-300'}`}>
+                                <span className={`w-1.5 h-1.5 rounded-full animate-pulse ${session.isFuture ? 'bg-red-500' : 'bg-blue-400'}`} />
+                                <span className={`text-sm font-bold tracking-tight ${session.isFuture ? 'text-red-400' : 'text-blue-300'}`}>
                                   Student: {session.studentName}
                                 </span>
-                                {index === 0 && <span className="text-[8px] bg-red-500/20 text-red-400 px-2 py-0.5 rounded-full font-bold uppercase tracking-widest">Most Recent</span>}
+                                {session.isFuture && <span className="text-[8px] bg-red-500/20 text-red-400 px-2 py-0.5 rounded-full font-bold uppercase tracking-widest">Upcoming</span>}
+                                {!session.isFuture && <span className="text-[8px] bg-blue-500/20 text-blue-400 px-2 py-0.5 rounded-full font-bold uppercase tracking-widest text-opacity-60">History</span>}
                               </div>
-                              <p className={`text-sm font-light leading-relaxed max-w-2xl ${index === 0 ? 'text-white/70' : 'text-white/50'}`}>
+                              <p className={`text-sm font-light leading-relaxed max-w-2xl ${session.isFuture ? 'text-white/70' : 'text-white/50'}`}>
                                 <span className="opacity-40 italic">Reported Issue: </span>
                                 "{session.problem}"
                               </p>
