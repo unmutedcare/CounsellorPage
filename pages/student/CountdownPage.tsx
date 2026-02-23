@@ -63,8 +63,8 @@ const CountdownPage = ({ sessionId: propSessionId }: { sessionId?: string }) => 
 
             const rem = backend.getRemainingTime(data.sessionTimestamp);
             setRemaining(rem);
-            // Increased buffer to 15 minutes
-            setJoinEnabled(backend.canJoinSession(data.sessionTimestamp, 15));
+            // Increased buffer to 45 minutes
+            setJoinEnabled(backend.canJoinSession(data.sessionTimestamp, 45));
             startCountdown(data.sessionTimestamp);
         } catch (e) {
             console.error("Failed to load session details", e);
@@ -75,8 +75,8 @@ const CountdownPage = ({ sessionId: propSessionId }: { sessionId?: string }) => 
         timerRef.current = setInterval(() => {
             const rem = backend.getRemainingTime(timestamp);
             setRemaining(rem);
-            // Increased buffer to 15 minutes
-            setJoinEnabled(backend.canJoinSession(timestamp, 15));
+            // Increased buffer to 45 minutes
+            setJoinEnabled(backend.canJoinSession(timestamp, 45));
             if (rem <= 0 && timerRef.current) {
                 clearInterval(timerRef.current);
             }
@@ -157,7 +157,7 @@ const CountdownPage = ({ sessionId: propSessionId }: { sessionId?: string }) => 
                     </button>
                     {!joinEnabled && (
                         <p className="text-center mt-6 text-[10px] font-luxury tracking-[0.2em] text-white/20 uppercase">
-                            Join button activates 5 minutes before your time
+                            Join button activates 45 minutes before your time
                         </p>
                     )}
                 </div>
