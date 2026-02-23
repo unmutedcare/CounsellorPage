@@ -63,7 +63,8 @@ const CountdownPage = ({ sessionId: propSessionId }: { sessionId?: string }) => 
 
             const rem = backend.getRemainingTime(data.sessionTimestamp);
             setRemaining(rem);
-            setJoinEnabled(backend.canJoinSession(data.sessionTimestamp));
+            // Increased buffer to 15 minutes
+            setJoinEnabled(backend.canJoinSession(data.sessionTimestamp, 15));
             startCountdown(data.sessionTimestamp);
         } catch (e) {
             console.error("Failed to load session details", e);
@@ -74,7 +75,8 @@ const CountdownPage = ({ sessionId: propSessionId }: { sessionId?: string }) => 
         timerRef.current = setInterval(() => {
             const rem = backend.getRemainingTime(timestamp);
             setRemaining(rem);
-            setJoinEnabled(backend.canJoinSession(timestamp));
+            // Increased buffer to 15 minutes
+            setJoinEnabled(backend.canJoinSession(timestamp, 15));
             if (rem <= 0 && timerRef.current) {
                 clearInterval(timerRef.current);
             }
@@ -84,10 +86,13 @@ const CountdownPage = ({ sessionId: propSessionId }: { sessionId?: string }) => 
     const handleJoin = async () => {
         try {
             const link = await backend.getMeetingLink(sessionId!);
+            if (!link || link === "#") {
+                throw new Error("Counsellor has not updated their meeting link yet.");
+            }
             await backend.markSessionLive(sessionId!);
             window.open(link, "_blank", "noopener,noreferrer");
-        } catch (e) {
-            alert("Unable to open meeting link. Please open it manually.\n" + e);
+        } catch (e: any) {
+            alert("EMERGENCY: " + (e.message || e) + "\nPlease refresh the page or contact support if the issue persists.");
         }
     };
 
