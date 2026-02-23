@@ -236,61 +236,56 @@ exports.verifyPayment = onCall(
       throw new HttpsError("permission-denied", "Invalid signature");
     }
 
+    // 1️⃣ PRE-FETCH: Find redundant slots before transaction
+    // (Admin SDK doesn't support queries inside transactions)
+    let redundantSlotRefs = [];
+    const freshSnap = await sessionRef.get();
+    if (!freshSnap.exists) throw new HttpsError("not-found", "Session not found");
+    const freshSession = freshSnap.data();
+    
+    const slotId = freshSession.selectedSlot?.slotDocId;
+    const sessionDate = freshSession.selectedSlot?.date;
+    const sessionTime = freshSession.selectedSlot?.time;
+
+    if (sessionDate && sessionTime) {
+      const otherSlotsQuery = admin.firestore().collection("GlobalSessions")
+        .where("date", "==", sessionDate)
+        .where("time", "==", sessionTime)
+        .where("isBooked", "==", false);
+      
+      const otherSlotsSnap = await otherSlotsQuery.get();
+      otherSlotsSnap.forEach(doc => {
+        if (doc.id !== slotId) {
+          redundantSlotRefs.push(doc.ref);
+        }
+      });
+    }
+
     // --- START TRANSACTION ---
     await admin.firestore().runTransaction(async (transaction) => {
-      // 1️⃣ ALL READS FIRST
-      const freshSnap = await transaction.get(sessionRef);
-      if (!freshSnap.exists) throw new HttpsError("not-found", "Session not found");
-      const freshSession = freshSnap.data();
+      const tSnap = await transaction.get(sessionRef);
+      const tSession = tSnap.data();
 
-      if (freshSession.status === "paid") return; // Already processed
+      if (tSession.status === "paid") return; // Already processed
 
-      const slotId = freshSession.selectedSlot?.slotDocId;
-      const sessionDate = freshSession.selectedSlot?.date;
-      const sessionTime = freshSession.selectedSlot?.time;
-
-      let slotSnap = null;
-      let otherSlotsSnap = null;
-
+      // 2️⃣ Mark specific slot as booked
       if (slotId) {
         const slotRef = admin.firestore().collection("GlobalSessions").doc(slotId);
-        slotSnap = await transaction.get(slotRef);
-
-        if (sessionDate && sessionTime) {
-          const otherSlotsQuery = admin.firestore().collection("GlobalSessions")
-            .where("date", "==", sessionDate)
-            .where("time", "==", sessionTime)
-            .where("isBooked", "==", false);
-          otherSlotsSnap = await transaction.get(otherSlotsQuery);
-        }
-      }
-
-      // 2️⃣ ALL WRITES AFTER
-      if (slotSnap && slotSnap.exists) {
-        if (slotSnap.data().isBooked && slotSnap.data().bookedBy !== sessionId) {
-          throw new HttpsError("failed-precondition", "SLOT_TAKEN_BY_OTHER");
-        }
-
-        // Mark specific slot as booked
-        transaction.update(slotSnap.ref, {
+        transaction.update(slotRef, {
           isBooked: true,
           bookedBy: sessionId,
           updatedAt: admin.firestore.FieldValue.serverTimestamp()
         });
-
-        // 🛑 GLOBAL LOCK: Delete redundant available slots
-        if (otherSlotsSnap) {
-          otherSlotsSnap.forEach(otherDoc => {
-            if (otherDoc.id !== slotId) {
-              console.log(`Global Lock: Deleting redundant slot ${otherDoc.id}`);
-              transaction.delete(otherDoc.ref);
-            }
-          });
-        }
       }
 
-      // Update VideoCallSession
-      console.log(`Setting VideoCallSession ${sessionId} to paid. Link: ${freshSession.meetingLink}`);
+      // 3️⃣ GLOBAL LOCK: Delete redundant slots pre-fetched
+      redundantSlotRefs.forEach(ref => {
+        console.log(`Global Lock: Deleting redundant slot ${ref.id}`);
+        transaction.delete(ref);
+      });
+
+      // 4️⃣ Update VideoCallSession
+      console.log(`Setting VideoCallSession ${sessionId} to paid. Link: ${tSession.meetingLink}`);
       transaction.update(sessionRef, {
         status: "paid",
         razorpayPaymentId: razorpay_payment_id,
@@ -298,8 +293,8 @@ exports.verifyPayment = onCall(
         reminderScheduled: false,
       });
 
-      // Add to user's personal Bookings
-      const studentUid = freshSession.student?.uid || auth.uid;
+      // 5️⃣ Add to user's personal Bookings
+      const studentUid = tSession.student?.uid || auth.uid;
       const userBookingRef = admin.firestore()
         .collection("Bookings")
         .doc(studentUid)
@@ -308,11 +303,11 @@ exports.verifyPayment = onCall(
 
       transaction.set(userBookingRef, {
         sessionId: sessionId,
-        counsellorUID: freshSession.counsellorId || freshSession.selectedSlot?.counsellorId || "",
-        counsellorName: freshSession.selectedSlot?.counsellorUsername || "Anonymous",
-        date: freshSession.selectedSlot?.date || "",
-        time: freshSession.selectedSlot?.time || "",
-        meetingLink: freshSession.meetingLink || "",
+        counsellorUID: tSession.counsellorId || tSession.selectedSlot?.counsellorId || "",
+        counsellorName: tSession.selectedSlot?.counsellorUsername || "Anonymous",
+        date: tSession.selectedSlot?.date || "",
+        time: tSession.selectedSlot?.time || "",
+        meetingLink: tSession.meetingLink || "",
         status: "upcoming",
         createdAt: admin.firestore.FieldValue.serverTimestamp(),
       });
