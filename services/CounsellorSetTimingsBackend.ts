@@ -76,9 +76,6 @@ async saveSessions(timings: TimingsMap): Promise<void> {
     );
   }
 }
-  // ----------------------------------------------------
-  // Sync GlobalSessions per date
-  // ----------------------------------------------------
  private async syncGlobalSessions(
   date: string,
   desiredTimes: string[],
@@ -86,6 +83,7 @@ async saveSessions(timings: TimingsMap): Promise<void> {
   username: string,
   email: string
 ) {
+  console.log(`🔄 SYNC GlobalSessions for ${date}. Desired:`, desiredTimes);
   const globalRef = collection(this.db, "GlobalSessions");
   const counsellorRef = doc(this.db, "Counsellors", this.counsellorId);
 
@@ -95,6 +93,7 @@ async saveSessions(timings: TimingsMap): Promise<void> {
     where("date", "==", date)
   );
   const allSnap = await getDocs(qAll);
+  console.log(`🔍 Found ${allSnap.size} total existing slots for ${date} in system.`);
   
   const bookedTimesByOthers = new Set<string>();
   const myExistingDocsByTime: Record<string, any[]> = {}; // Support multiple for cleanup
@@ -115,13 +114,14 @@ async saveSessions(timings: TimingsMap): Promise<void> {
   for (const time of desiredSet) {
     // Block if someone else is already booked at this time
     if (bookedTimesByOthers.has(time)) {
-      console.warn(`Time ${time} on ${date} is already booked by another counsellor. Skipping.`);
+      console.warn(`🚫 Time ${time} on ${date} is already booked by another counsellor. Skipping.`);
       continue;
     }
 
     const existing = myExistingDocsByTime[time] || [];
     
     if (existing.length === 0) {
+      console.log(`➕ Creating new slot for ${time} on ${date}`);
       // Create new
       await addDoc(globalRef, {
         counsellorId: this.counsellorId,
@@ -134,11 +134,15 @@ async saveSessions(timings: TimingsMap): Promise<void> {
         bookedBy: null,
         timestamp: serverTimestamp(),
       });
-    } else if (existing.length > 1) {
-      // Cleanup duplicates (keep the first one, delete others if not booked)
-      for (let i = 1; i < existing.length; i++) {
-        if (!existing[i].data().isBooked) {
-          await deleteDoc(existing[i].ref);
+    } else {
+      console.log(`✅ Slot for ${time} on ${date} already exists. Skipping creation.`);
+      if (existing.length > 1) {
+        // Cleanup duplicates (keep the first one, delete others if not booked)
+        for (let i = 1; i < existing.length; i++) {
+          if (!existing[i].data().isBooked) {
+            console.log(`🗑️ Deleting duplicate slot: ${existing[i].id}`);
+            await deleteDoc(existing[i].ref);
+          }
         }
       }
     }
@@ -149,6 +153,7 @@ async saveSessions(timings: TimingsMap): Promise<void> {
     if (!desiredSet.has(time)) {
       for (const d of docSnaps) {
         if (!d.data().isBooked) {
+          console.log(`➖ Deleting removed slot for ${time} on ${date}`);
           await deleteDoc(d.ref);
         }
       }
@@ -168,5 +173,6 @@ async saveSessions(timings: TimingsMap): Promise<void> {
     },
     { merge: true }
   );
+  console.log(`✨ SYNC for ${date} complete.`);
 }
 }

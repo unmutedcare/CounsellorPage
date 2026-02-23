@@ -31,6 +31,8 @@ class CalendarBackend {
       date.getMonth() + 1
     ).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
 
+    console.log("📅 Fetching available slots for date:", dateStr);
+
     const q = query(
       collection(this.db, "GlobalSessions"),
       where("date", "==", dateStr),
@@ -38,6 +40,7 @@ class CalendarBackend {
     );
 
     const querySnapshot = await getDocs(q);
+    console.log("🔍 Firestore returned", querySnapshot.size, "slots for", dateStr);
 
     const slots: SlotsMap = {};
 
@@ -56,6 +59,7 @@ class CalendarBackend {
       });
     });
 
+    console.log("✨ Final processed slots map:", slots);
     return slots;
   }
 
