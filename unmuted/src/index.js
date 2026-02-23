@@ -299,9 +299,10 @@ exports.verifyPayment = onCall(
       });
 
       // Add to user's personal Bookings
+      const studentUid = freshSession.student?.uid || auth.uid;
       const userBookingRef = admin.firestore()
         .collection("Bookings")
-        .doc(auth.uid)
+        .doc(studentUid)
         .collection("sessions")
         .doc(sessionId);
 
