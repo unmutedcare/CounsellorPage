@@ -73,42 +73,86 @@ const CalendarPage: React.FC<CalendarPageProps> = ({ sessionId }) => {
   };
 
   const handleDateSelect = async (date: Date) => {
-    try {
-      setSelectedDate(date);
-      setSelectedTime(null);
-      setSlots({});
-      setIsLoadingSlots(true);
+    setSelectedDate(date);
+    setSelectedTime(null);
+    setSlots({});
+    setIsLoadingSlots(true);
 
-      const fetchedSlots = await backend.getAvailableSlots(date);
+    const dateStr = `${date.getFullYear()}-${String(
+      date.getMonth() + 1
+    ).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
+
+    // 🔄 REAL-TIME LISTENER: Vanish booked slots instantly
+    const { onSnapshot, collection, query, where } = await import("firebase/firestore");
+    const { db } = await import("../../firebase/firebase");
+
+    const q = query(
+      collection(db, "GlobalSessions"),
+      where("date", "==", dateStr),
+      where("isBooked", "==", false)
+    );
+
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+      const fetchedSlots: SlotMap = {};
       const now = new Date();
-      const filtered: SlotMap = {};
       let totalCount = 0;
       let visibleCount = 0;
 
-      Object.entries(fetchedSlots).forEach(([time, counsellors]) => {
-        totalCount += counsellors.length;
+      snapshot.forEach((docSnap) => {
+        const data = docSnap.data();
+        const time = data.time as string;
         const dt = slotDateTime(date, time);
 
-        if (
-          date.toDateString() !== now.toDateString() ||
-          dt > now
-        ) {
-          filtered[time] = counsellors;
-          visibleCount += counsellors.length;
+        // Filter out past slots
+        if (date.toDateString() !== now.toDateString() || dt > now) {
+          fetchedSlots[time] ??= [];
+          fetchedSlots[time].push({
+            counsellorId: data.counsellorId,
+            initials: data.counsellorInitials,
+            username: data.counsellorUsername,
+            email: data.counsellorEmail,
+            docId: docSnap.id,
+          });
+          visibleCount++;
         }
+        totalCount++;
       });
 
-      if (totalCount > 0 && visibleCount === 0) {
-        alert(`Note: Found ${totalCount} slots for this date, but they are all in the past, so they are hidden from students.`);
+      if (totalCount > 0 && visibleCount === 0 && date.toDateString() === now.toDateString()) {
+        console.log(`Hidden ${totalCount} past slots.`);
       }
 
-      setSlots(filtered);
-    } catch (err) {
-      alert("Failed to load available slots. Please try again.");
-      console.error(err);
-    } finally {
+      setSlots(fetchedSlots);
       setIsLoadingSlots(false);
-    }
+    }, (err) => {
+      alert("Failed to load available slots.");
+      console.error(err);
+      setIsLoadingSlots(false);
+    });
+
+    return unsubscribe;
+  };
+
+  // Keep track of the active listener to clean it up
+  const activeUnsubscribe = useRef<(() => void) | null>(null);
+
+  useEffect(() => {
+    const init = async () => {
+      if (!selectedDate) {
+        const unsub = await handleDateSelect(availableDates[0]);
+        activeUnsubscribe.current = unsub;
+      }
+    };
+    init();
+    return () => {
+      if (activeUnsubscribe.current) activeUnsubscribe.current();
+    };
+  }, []);
+
+  const handleDateChange = async (date: Date) => {
+    if (activeUnsubscribe.current) activeUnsubscribe.current();
+    const unsub = await handleDateSelect(date);
+    activeUnsubscribe.current = unsub;
   };
 
   const handleConfirm = async () => {
@@ -197,7 +241,7 @@ const CalendarPage: React.FC<CalendarPageProps> = ({ sessionId }) => {
               return (
                 <button
                   key={i}
-                  onClick={() => handleDateSelect(date)}
+                  onClick={() => handleDateChange(date)}
                   className={`flex-shrink-0 w-20 h-28 rounded-3xl flex flex-col items-center justify-center transition-all duration-500 border
                     ${isSelected 
                       ? "bg-brand-secondary border-brand-secondary shadow-lg shadow-brand-secondary/30 scale-105" 

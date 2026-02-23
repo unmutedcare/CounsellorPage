@@ -250,11 +250,11 @@ exports.verifyPayment = onCall(
     if (sessionDate && sessionTime) {
       const otherSlotsQuery = admin.firestore().collection("GlobalSessions")
         .where("date", "==", sessionDate)
-        .where("time", "==", sessionTime)
-        .where("isBooked", "==", false);
+        .where("time", "==", sessionTime);
       
       const otherSlotsSnap = await otherSlotsQuery.get();
       otherSlotsSnap.forEach(doc => {
+        // Delete every other slot for this time globally
         if (doc.id !== slotId) {
           redundantSlotRefs.push(doc.ref);
         }
@@ -317,8 +317,8 @@ exports.verifyPayment = onCall(
 
     // 🔔 Notify counsellor AFTER successful transaction
     const finalSnap = await sessionRef.get();
-    const session = finalSnap.data();
-    const targetCounsellorId = session.counsellorId || session.selectedSlot?.counsellorId;
+    const finalSession = finalSnap.data();
+    const targetCounsellorId = finalSession.counsellorId || finalSession.selectedSlot?.counsellorId;
     
     if (targetCounsellorId) {
       await sendCounsellorNotification(
