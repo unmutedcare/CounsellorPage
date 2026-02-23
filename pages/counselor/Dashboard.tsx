@@ -91,20 +91,33 @@ const CounselorDashboard: React.FC = () => {
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {sessions.map((s) => (
-                <div key={s.id} className="glass-panel p-8 border-white/5 hover:border-white/10 transition-all flex justify-between items-center group">
+                <div key={s.id} className="glass-panel p-8 border-white/5 hover:border-white/10 transition-all flex flex-col md:flex-row justify-between items-start md:items-center gap-8 group">
                   <div className="space-y-2">
                     <p className="text-[10px] font-luxury tracking-[0.2em] text-[#5856d6] uppercase">Active Engagement</p>
-                    <h4 className="text-xl font-bold tracking-tight">Student: {s.studentId.slice(0, 8)}...</h4>
+                    <h4 className="text-xl font-bold tracking-tight">Student: {s.student?.username || s.studentId.slice(0, 8) + "..."}</h4>
                     <div className="flex items-center gap-4 text-white/40 text-sm font-light">
                        <div className="flex items-center gap-1.5"><Calendar size={14}/> {s.date}</div>
                        <div className="flex items-center gap-1.5"><Clock size={14}/> {s.time}</div>
                     </div>
                   </div>
-                  <div className="flex flex-col items-end gap-4">
+                  <div className="flex flex-col md:flex-row items-start md:items-center gap-4 w-full md:w-auto">
                     <span className="px-4 py-1 bg-white/5 rounded-full text-[9px] font-luxury tracking-widest uppercase border border-white/10 group-hover:border-[#5856d6]/30 transition-colors">
                       {s.status}
                     </span>
-                    <button className="text-[#5856d6] opacity-0 group-hover:opacity-100 transition-opacity translate-x-2 group-hover:translate-x-0">
+                    
+                    {(s.status === 'paid' || s.status === 'live') && (
+                      <button 
+                        onClick={() => window.open(s.meetingLink, "_blank")}
+                        className="flex items-center gap-2 px-6 py-2 bg-[#4caf50] text-white rounded-xl text-[10px] font-luxury tracking-widest uppercase hover:scale-105 transition-all shadow-lg shadow-[#4caf50]/20"
+                      >
+                        Join Portal
+                      </button>
+                    )}
+
+                    <button 
+                      onClick={() => navigate("/counsellor/upcoming-cases")}
+                      className="text-[#5856d6] opacity-0 group-hover:opacity-100 transition-opacity translate-x-2 group-hover:translate-x-0 hidden md:block"
+                    >
                        <ChevronRight size={20} />
                     </button>
                   </div>
