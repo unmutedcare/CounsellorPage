@@ -82,8 +82,11 @@ const CalendarPage: React.FC<CalendarPageProps> = ({ sessionId }) => {
       const fetchedSlots = await backend.getAvailableSlots(date);
       const now = new Date();
       const filtered: SlotMap = {};
+      let totalCount = 0;
+      let visibleCount = 0;
 
       Object.entries(fetchedSlots).forEach(([time, counsellors]) => {
+        totalCount += counsellors.length;
         const dt = slotDateTime(date, time);
 
         if (
@@ -91,8 +94,13 @@ const CalendarPage: React.FC<CalendarPageProps> = ({ sessionId }) => {
           dt > now
         ) {
           filtered[time] = counsellors;
+          visibleCount += counsellors.length;
         }
       });
+
+      if (totalCount > 0 && visibleCount === 0) {
+        alert(`Note: Found ${totalCount} slots for this date, but they are all in the past, so they are hidden from students.`);
+      }
 
       setSlots(filtered);
     } catch (err) {

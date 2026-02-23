@@ -99,7 +99,9 @@ const SetTiming: React.FC = () => {
       await backend.saveSessions(timings);
       const saved = await backend.getCounsellorSessions();
       setTimings(saved);
-      alert("Sessions saved successfully");
+      
+      const slotCount = Object.values(timings).flat().length;
+      alert(`Success! ${slotCount} slots are now live on the student calendar.`);
     } catch (e: any) {
       console.error(e);
       alert(e.message || "Failed to save");
