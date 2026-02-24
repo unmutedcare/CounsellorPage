@@ -212,6 +212,8 @@ const MentorPortal: React.FC = () => {
         const status = data.status;
         const sessionTs = data.sessionTimestamp?.toDate() || data.createdAt?.toDate() || new Date(0);
 
+        const problem = data.description || (data.emotions ? data.emotions.join(", ") : "N/A");
+
         // If unpaid/abandoned
         if (!["paid", "live", "completed"].includes(status)) {
           unpaid.push({
