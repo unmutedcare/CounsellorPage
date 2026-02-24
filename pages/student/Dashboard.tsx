@@ -129,11 +129,41 @@ const StudentDashboard: React.FC = () => {
              <h2 className="text-xl font-luxury tracking-[0.2em] text-white/60">RESOURCES</h2>
           </div>
           
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-            <FeatureCard icon={<Zap size={20}/>} text="AI Support" badge="BETA" color="#6366f1" />
-            <FeatureCard icon={<Wind size={20}/>} text="Mindfulness" badge="SOON" color="#10b981" />
-            <FeatureCard icon={<Book size={20}/>} text="Wellness Journal" badge="SOON" color="#6366f1" />
-            <FeatureCard icon={<User size={20}/>} text="Support Community" badge="SOON" color="#10b981" />
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            <FeatureCard 
+              icon={<Zap size={20}/>} 
+              text="AI Support" 
+              badge="BETA" 
+              color="#6366f1" 
+            />
+            
+            <a href="https://discord.gg/YUcN98R9qq" target="_blank" rel="noopener noreferrer" className="block h-full">
+              <FeatureCard 
+                icon={
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M9 10h.01M15 10h.01M7 15c.01 0 7 0 10 0M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12c0 1.821.487 3.53 1.338 5L2 22l4.85-.85C8.29 21.623 10.064 22 12 22z" />
+                  </svg>
+                } 
+                text="Join Discord Community" 
+                badge="JOIN NOW" 
+                color="#5865F2" 
+                clickable
+              />
+            </a>
+
+            <a href="https://www.instagram.com/unmutedcare?utm_source=ig_web_button_share_sheet&igsh=ZDNlZDc0MzIxNw==" target="_blank" rel="noopener noreferrer" className="block h-full">
+              <FeatureCard 
+                icon={
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <rect width="20" height="20" x="2" y="2" rx="5" ry="5"/><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/><line x1="17.5" x2="17.51" y1="6.5" y2="6.5"/>
+                  </svg>
+                } 
+                text="Follow on Instagram" 
+                badge="FOLLOW US" 
+                color="#E4405F" 
+                clickable
+              />
+            </a>
           </div>
         </div>
       </div>
@@ -148,14 +178,14 @@ const StudentDashboard: React.FC = () => {
   );
 };
 
-const FeatureCard = ({ icon, text, badge, color }: { icon: any, text: string, badge: string, color: string }) => (
-  <div className="glass-panel p-6 border border-white/5 hover:border-white/20 transition-all cursor-not-allowed group">
+const FeatureCard = ({ icon, text, badge, color, clickable = false }: { icon: any, text: string, badge: string, color: string, clickable?: boolean }) => (
+  <div className={`glass-panel p-6 border border-white/5 transition-all h-full group ${clickable ? 'hover:border-white/20 cursor-pointer active:scale-95' : 'cursor-not-allowed'}`}>
     <div className="flex flex-col gap-6">
        <div className="w-10 h-10 rounded-xl bg-white/5 flex items-center justify-center group-hover:bg-white/10 transition-colors">
           <div style={{ color }}>{icon}</div>
        </div>
        <div>
-          <div className="text-[9px] font-luxury tracking-[0.2em] mb-2 opacity-40">{badge}</div>
+          <div className="text-[9px] font-luxury tracking-[0.2em] mb-2 opacity-40 uppercase">{badge}</div>
           <p className="text-sm font-semibold tracking-wide text-white/70">{text}</p>
        </div>
     </div>

@@ -77,6 +77,38 @@ const GlobalNavbar: React.FC = () => {
       {/* Actions */}
       {isAuthenticated && (
         <div className="flex items-center gap-3">
+          <a
+            href="https://discord.gg/YUcN98R9qq"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="p-2.5 rounded-xl glass-panel border border-white/10 hover:border-[#5865F2]/50 transition-all hover:scale-105 active:scale-95 group"
+            title="Join Discord"
+          >
+            <svg 
+              width="20" height="20" viewBox="0 0 24 24" fill="none" 
+              className="text-white/40 group-hover:text-[#5865F2] transition-colors"
+              stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
+            >
+              <path d="M9 10h.01M15 10h.01M7 15c.01 0 7 0 10 0M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12c0 1.821.487 3.53 1.338 5L2 22l4.85-.85C8.29 21.623 10.064 22 12 22z" />
+            </svg>
+          </a>
+
+          <a
+            href="https://www.instagram.com/unmutedcare?utm_source=ig_web_button_share_sheet&igsh=ZDNlZDc0MzIxNw=="
+            target="_blank"
+            rel="noopener noreferrer"
+            className="p-2.5 rounded-xl glass-panel border border-white/10 hover:border-[#E4405F]/50 transition-all hover:scale-105 active:scale-95 group"
+            title="Follow on Instagram"
+          >
+            <svg 
+              width="20" height="20" viewBox="0 0 24 24" fill="none" 
+              className="text-white/40 group-hover:text-[#E4405F] transition-colors"
+              stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
+            >
+              <rect width="20" height="20" x="2" y="2" rx="5" ry="5"/><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/><line x1="17.5" x2="17.51" y1="6.5" y2="6.5"/>
+            </svg>
+          </a>
+
           <button
             onClick={() => navigate("/profile")}
             className={`p-2.5 rounded-xl glass-panel border border-white/10 transition-all hover:scale-105 active:scale-95 group
